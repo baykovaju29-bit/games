@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { shuffle } from "../utils";
 
-export default function Matching({ pairs }) {
+export default function MatchingGame({ pairs = [] }) {
   const [round, setRound] = useState(() => shuffle(pairs));
   const [left, setLeft] = useState(() => shuffle(round).map(p => ({...p, id: Math.random().toString(36).slice(2,9)})));
   const [right, setRight] = useState(() => shuffle(round).map(p => ({...p, id: Math.random().toString(36).slice(2,9)})));
