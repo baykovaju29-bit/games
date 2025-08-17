@@ -23,12 +23,6 @@ export function shuffle(arr) {
   return copy;
 }
 
-export function secToClock(s) {
-  const m = Math.floor(s / 60).toString().padStart(2, "0");
-  const r = Math.floor(s % 60).toString().padStart(2, "0");
-  return `${m}:${r}`;
-}
-
 export function getParam(name) {
   const u = new URL(window.location.href);
   return u.searchParams.get(name);
