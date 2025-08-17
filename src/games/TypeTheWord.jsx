@@ -10,7 +10,7 @@ function norm(s) {
     .trim();
 }
 
-export default function TypeWordGame({ pairs = [] }) {
+export default function TypeTheWord({ pairs = [] }) {
   const deck = useMemo(() => shuffle(pairs), [pairs]);
   const [i, setI] = useState(0);
   const [value, setValue] = useState("");
