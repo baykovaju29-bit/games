@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import MatchingGame from "./games/MatchingGame.jsx";
-import FlashcardsGame from "./games/FlashcardsGame.jsx";
-import QuizGame from "./games/QuizGame.jsx";
-import TypeWordGame from "./games/TypeWordGame.jsx";
+import Matching from "./games/Matching.jsx";
+import Flashcards from "./games/Flashcards.jsx";
+import Quiz from "./games/Quiz.jsx";
+import TypeWord from "./games/TypeWord.jsx";
 
 export default function App() {
   const [game, setGame] = useState(null);
@@ -49,10 +49,10 @@ export default function App() {
             ⬅ Back to Menu
           </button>
 
-          {game === "matching" && <MatchingGame />}
-          {game === "flashcards" && <FlashcardsGame />}
-          {game === "quiz" && <QuizGame />}
-          {game === "type" && <TypeWordGame />}
+          {game === "matching" && <Matching />}
+          {game === "flashcards" && <Flashcards />}
+          {game === "quiz" && <Quiz />}
+          {game === "type" && <TypeWord />}
         </div>
       )}
     </div>
