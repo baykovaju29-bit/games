@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { shuffle } from "../utils";
 
-export default function Quiz({ pairs }) {
+export default function QuizGame({ pairs = [] }) {
   const deck = useMemo(() => shuffle(pairs), [pairs]);
   const [i, setI] = useState(0);
   const [score, setScore] = useState(0);
