@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Matching from "./games/Matching.jsx";
 import Flashcards from "./games/Flashcards.jsx";
 import Quiz from "./games/Quiz.jsx";
-import TypeWord from "./games/TypeWord.jsx";
+import Type from "./games/Type.jsx";
 
 export default function App() {
   const [game, setGame] = useState(null);
