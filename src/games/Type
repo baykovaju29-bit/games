@@ -1,0 +1,1 @@
+import React from 'react'; export default function TypeTheWord(){ return <div>Type game placeholder</div>}
