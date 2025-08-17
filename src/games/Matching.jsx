@@ -49,12 +49,14 @@ export default function Matching({ pairs=[], meta }) {
         </div>
       }
     >
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
-        <Stat label="Score" value={score}/>
-        <Stat label="Streak" value={streak}/>
-        <Stat label="Mistakes" value={mistakes}/>
-        <Stat label="Pairs" value={`${Object.keys(matched).length}/${round.length}`}/>
+            {/* Статистика: на мобилке 4 в ряд, компактный вид */}
+      <div className="grid grid-cols-4 gap-2 md:gap-3 mb-6">
+        <Stat label="Score"    value={score} />
+        <Stat label="Streak"   value={streak} />
+        <Stat label="Mistakes" value={mistakes} />
+        <Stat label="Pairs"    value={`${Object.keys(matched).length}/${round.length}`} />
       </div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Column title="Words" items={left}  selected={selLeft}  setSelected={setSelLeft}  matched={matched} side="left"/>
