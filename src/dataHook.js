@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { REFRESH_MS, parsePairs, getParam, fetchText } from "./utils";
 
-const SAMPLE = `polite — shows good manners and respect
-rude — not polite; impolite or offensive
-shy — nervous or uncomfortable with people
-confident — sure of yourself; not shy`;
-
 export function usePairsData() {
   const [raw, setRaw] = useState("");
   const [pairs, setPairs] = useState([]);
@@ -59,5 +54,5 @@ export function usePairsData() {
 
   useEffect(() => setPairs(parsePairs(raw)), [raw]);
 
-  return { pairs, raw, source, error, updatedAt };
+  return { pairs, source, error, updatedAt };
 }
