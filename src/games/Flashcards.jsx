@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { shuffle } from "../utils";
 
-export default function Flashcards({ pairs }) {
+export default function FlashcardsGame({ pairs = [] }) {
   const deck = useMemo(() => shuffle(pairs), [pairs]);
   const [idx, setIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
