@@ -39,10 +39,7 @@ export function usePairsData() {
           const t = await fetchText("/data.txt");
           if (active) setRaw(t);
         }
-        if (active) {
-          setSource(src);
-          setUpdatedAt(new Date());
-        }
+        if (active) { setSource(src); setUpdatedAt(new Date()); }
       } catch (e) {
         if (active) setError(String(e.message || e));
       }
