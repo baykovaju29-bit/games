@@ -30,3 +30,25 @@ html, body, #root { height: 100%; }
   .backface-hidden  { backface-visibility: hidden; }
   .rotate-y-180     { transform: rotateY(180deg); }
 }
+@layer utilities {
+  .perspective      { perspective: 1000px; }
+  .preserve-3d      { transform-style: preserve-3d; }
+  .backface-hidden  { backface-visibility: hidden; }
+  .rotate-y-180     { transform: rotateY(180deg); }
+
+  /* Мягкая зелёная вспышка (успех) */
+  .flash-success { animation: flash-success 600ms ease-out; }
+  @keyframes flash-success {
+    0%   { background-color: rgba(16,185,129,0.15); }
+    100% { background-color: transparent; }
+  }
+
+  /* Лёгкая тряска (ошибка) */
+  .animate-shake { animation: shake 300ms ease-in-out; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25%     { transform: translateX(-4px); }
+    50%     { transform: translateX(4px); }
+    75%     { transform: translateX(-2px); }
+  }
+}
