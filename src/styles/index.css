@@ -24,3 +24,9 @@ html, body, #root { height: 100%; }
   .stat-label { @apply text-xs uppercase tracking-wide text-slate-500; }
   .stat-value { @apply text-2xl font-bold; }
 }
+@layer utilities {
+  .perspective      { perspective: 1000px; }
+  .preserve-3d      { transform-style: preserve-3d; }
+  .backface-hidden  { backface-visibility: hidden; }
+  .rotate-y-180     { transform: rotateY(180deg); }
+}
