@@ -6,6 +6,8 @@ import Matching from "./games/Matching.jsx";
 import Flashcards from "./games/Flashcards.jsx";
 import Quiz from "./games/Quiz.jsx";
 import TypeTheWord from "./games/TypeTheWord.jsx";
+import SentenceBuilder from "./games/SentenceBuilder.jsx";
+
 
 export default function App() {
   const { pairs, source, error, updatedAt } = usePairsData();
@@ -28,6 +30,8 @@ export default function App() {
         {view === "flashcards" && <Flashcards   pairs={pairs} meta={meta} />}
         {view === "quiz"       && <Quiz         pairs={pairs} meta={meta} />}
         {view === "type"       && <TypeTheWord  pairs={pairs} meta={meta} />}
+        {view === "builder" && <SentenceBuilder meta={meta} />}
+
       </div>
     );
   }
@@ -45,6 +49,8 @@ export default function App() {
             { id: "flashcards", icon:"🃏", title:"Flashcards", desc:"Flip to reveal" },
             { id: "quiz",       icon:"❓", title:"Quiz",       desc:"Multiple choice" },
             { id: "type",       icon:"⌨️", title:"Type the Word", desc:"Type from definition" },
+      { id: "builder", icon: "🧱", title: "Sentence Builder", desc: "Arrange words to form a sentence" },
+
           ].map(g => (
             <button key={g.id} className="card card-pad text-left hover:bg-slate-50 active:scale-[0.99] transition"
                     onClick={()=>setView(g.id)}>
