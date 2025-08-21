@@ -1,184 +1,88 @@
-import React, { useMemo, useState } from "react";
-import Page from "../ui/Page.jsx";
-import Stat from "../ui/Stat.jsx";
-import { shuffle } from "../utils";
+import React, { useState } from "react";
 
-// Примеры по умолчанию
-const SAMPLE = [
-  "Yesterday I went to the park.",
-  "She has already finished her homework.",
-  "We are going to visit our grandparents next weekend.",
-  "If it rains, we will stay at home.",
-  "He was reading a book when I called.",
-  "The film had already started when we arrived.",
-  "Coffee is grown in many countries.",
-  "I wish I had more free time.",
-];
+export default function SentenceBuilder({ meta }) {
+  const [words, setWords] = useState(["I", "am", "learning", "English"]);
+  const [shuffled, setShuffled] = useState([...words].sort(() => Math.random() - 0.5));
+  const [selected, setSelected] = useState([]);
+  const [status, setStatus] = useState(null); // "correct" | "wrong" | null
 
-// --- Токенизация ---
-// Убираем конечную точку/!/? из конца предложения (ставить не нужно),
-// затем разбиваем по пробелам. Внутренние запятые оставляем как есть.
-function tokenize(sentence) {
-  const cleaned = (sentence || "")
-    .trim()
-    .replace(/[.?!…]+$/u, ""); // УДАЛЯЕМ конечный знак
-  const parts = cleaned.split(/\s+/);
-  return parts.map((t, idx) => ({ t, id: `${idx}:${t}` }));
-}
+  const handleWordClick = (word) => {
+    if (selected.includes(word)) return; // уже выбрали
+    setSelected([...selected, word]);
+  };
 
-function normalizeTokens(tokens) {
-  return tokens
-    .map((x) => x.t)
-    .join(" ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
-
-export default function SentenceBuilder({ items = SAMPLE, meta }) {
-  const deck = useMemo(() => items.filter(Boolean), [items]);
-
-  const [i, setI] = useState(0);
-  const [answer, setAnswer] = useState([]);
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [answered, setAnswered] = useState(0);
-  const [message, setMessage] = useState("");
-
-  const [wrongPulse, setWrongPulse] = useState(false);  // для красной подсветки/тряски
-  const [okFlash, setOkFlash] = useState(false);        // для зелёной вспышки на кнопке Check
-
-  const target = deck[i] || "";
-  const targetTokens = useMemo(() => tokenize(target), [target]);
-
-  // Лоток = перемешанные целевые токены минус уже выбранные
-  const tray = useMemo(() => {
-    const shuffled = shuffle(targetTokens);
-    const used = new Set(answer.map((x) => x.id));
-    return shuffled.filter((x) => !used.has(x.id));
-  }, [targetTokens, answer]);
-
-  function pick(tokenObj) {
-    setAnswer((a) => [...a, tokenObj]);
-  }
-  function undo(idx) {
-    setAnswer((a) => a.filter((_, j) => j !== idx));
-  }
-
-  function resetCurrent() {
-    setAnswer([]);
-    setMessage("");
-    setWrongPulse(false);
-    setOkFlash(false);
-  }
-
-  function next() {
-    setI((n) => (n + 1) % deck.length);
-    resetCurrent();
-  }
-
-  function check() {
-    const ok =
-      normalizeTokens(answer) === normalizeTokens(targetTokens);
-
-    setAnswered((n) => n + 1);
-
-    if (ok) {
-      setScore((s) => s + 1);
-      setStreak((st) => st + 1);
-      setMessage("✅ Correct!");
-
-      // зелёная мягкая вспышка на кнопке Check
-      setOkFlash(true);
-      setTimeout(() => setOkFlash(false), 600);
-
-      // быстрый переход к следующему
-      setTimeout(() => next(), 700);
+  const handleCheck = () => {
+    if (selected.join(" ") === words.join(" ")) {
+      setStatus("correct");
+      setTimeout(() => setStatus(null), 1000);
     } else {
-      setStreak(0);
-      setMessage("❌ Try again");
-
-      // покрасить ответ и встряхнуть, затем вернуть фишки
-      setWrongPulse(true);
+      setStatus("wrong");
       setTimeout(() => {
-        setWrongPulse(false);
-        setAnswer([]); // вернуть фишки обратно в лоток
-      }, 350);
+        setStatus(null);
+        setSelected([]);
+      }, 800);
     }
-  }
+  };
 
-  const accuracy =
-    answered > 0 ? Math.round((score / answered) * 100) + "%" : "—";
+  const handleReset = () => {
+    setSelected([]);
+    setStatus(null);
+  };
+
+  const handleSkip = () => {
+    setSelected(words); // показываем правильный ответ
+    setStatus("correct");
+  };
 
   return (
-    <Page
-      title="Sentence Builder"
-      subtitle="Tap words in order to build a correct sentence. (No dot at the end needed)"
-      right={
-        <div className="flex gap-2">
-          <button className="btn" onClick={resetCurrent}>Reset</button>
-          <button className={"btn btn-primary " + (okFlash ? "flash-success" : "")} onClick={check} disabled={answer.length === 0}>
-            Check
+    <div className="container">
+      <h1 className="h1 mb-4">🧱 Sentence Builder</h1>
+
+      {/* собранное предложение */}
+      <div className="min-h-[3rem] border rounded-lg px-3 py-2 mb-4 bg-slate-50">
+        {selected.join(" ")}
+      </div>
+
+      {/* кнопки-слова */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {shuffled.map((w, i) => (
+          <button
+            key={i}
+            onClick={() => handleWordClick(w)}
+            className={`px-4 py-2 rounded-lg border transition ${
+              selected.includes(w)
+                ? status === "wrong"
+                  ? "bg-red-200 animate-shake"
+                  : "bg-slate-200 opacity-60"
+                : "bg-white hover:bg-slate-100"
+            }`}
+          >
+            {w}
           </button>
-          <button className="btn" onClick={next}>Skip</button>
-        </div>
-      }
-    >
-      {/* Статы: 4 в ряд на мобилке */}
-      <div className="grid grid-cols-4 gap-2 md:gap-3 mb-6">
-        <Stat label="Sentence" value={`${i + 1}/${deck.length}`} />
-        <Stat label="Score" value={score} />
-        <Stat label="Streak" value={streak} />
-        <Stat label="Accuracy" value={accuracy} />
+        ))}
       </div>
 
-      {/* Подсказка */}
-      <div className="card card-pad sub mb-3">
-        Arrange the shuffled tiles to form a correct sentence.
+      {/* кнопки действий */}
+      <div className="flex gap-3 mb-8">
+        <button
+          onClick={handleReset}
+          className="flex-1 px-6 py-2 rounded-lg border bg-white hover:bg-slate-100"
+        >
+          🔄 Reset
+        </button>
+        <button
+          onClick={handleCheck}
+          className="flex-1 px-6 py-2 rounded-lg border bg-green-100 hover:bg-green-200"
+        >
+          ✅ Check
+        </button>
+        <button
+          onClick={handleSkip}
+          className="flex-1 px-6 py-2 rounded-lg border bg-yellow-100 hover:bg-yellow-200"
+        >
+          ⏭️ Skip
+        </button>
       </div>
-
-      {/* Ответ игрока — подсветка/тряска при ошибке */}
-      <div className={"card card-pad mb-4 " + (wrongPulse ? "animate-shake" : "")}>
-        <div className="sub mb-2">Your sentence</div>
-        <div className="flex flex-wrap gap-2">
-          {answer.length === 0 && (
-            <span className="text-slate-400">Tap tiles below…</span>
-          )}
-          {answer.map((x, idx) => (
-            <button
-              key={"a" + x.id + idx}
-              onClick={() => undo(idx)}
-              className={
-                "btn " +
-                (wrongPulse ? "bg-rose-50 border-rose-200" : "")
-              }
-              title="Remove this token"
-            >
-              {x.t}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Лоток */}
-      <div className="card card-pad">
-        <div className="sub mb-2">Tiles</div>
-        <div className="flex flex-wrap gap-2">
-          {tray.map((x) => (
-            <button
-              key={x.id}
-              onClick={() => pick(x)}
-              className="btn"
-              title="Add token"
-            >
-              {x.t}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {message && <div className="text-center mt-3 sub">{message}</div>}
-      <div className="mt-4">{meta}</div>
-    </Page>
+    </div>
   );
 }
