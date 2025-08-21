@@ -7,6 +7,7 @@ import Flashcards from "./games/Flashcards.jsx";
 import Quiz from "./games/Quiz.jsx";
 import TypeTheWord from "./games/TypeTheWord.jsx";
 import SentenceBuilder from "./games/SentenceBuilder.jsx";
+import FillTheGap from "./games/FillTheGap.jsx";
 
 export default function App() {
   const { pairs, source, error, updatedAt } = usePairsData();
