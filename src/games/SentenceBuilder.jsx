@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 
 export default function SentenceBuilder({ meta }) {
-  const [words, setWords] = useState(["I", "am", "learning", "English"]);
+  const [words] = useState(["I", "am", "learning", "English"]);
   const [shuffled, setShuffled] = useState([...words].sort(() => Math.random() - 0.5));
   const [selected, setSelected] = useState([]);
   const [status, setStatus] = useState(null); // "correct" | "wrong" | null
 
-  const handleWordClick = (word, index) => {
-    if (selected.includes(word)) return; // уже выбрали
+  const handleWordClick = (word) => {
+    if (selected.includes(word)) return; // не даём выбрать повторно
     setSelected([...selected, word]);
   };
 
@@ -24,19 +24,10 @@ export default function SentenceBuilder({ meta }) {
     }
   };
 
-  const handleReset = () => {
-    setSelected([]);
-    setStatus(null);
-  };
-
-  const handleSkip = () => {
-    setSelected(words); // показываем правильный ответ
-    setStatus("correct");
-  };
-
   return (
     <div className="container">
-      <h1 className="h1 mb-4">🧱 Sentence Builder</h1>
+      <h1 className="h1 mb-2">🧱 Sentence Builder</h1>
+      <p className="sub mb-4">Arrange the shuffled tiles to form a correct sentence.</p>
 
       {/* собранное предложение */}
       <div className="min-h-[3rem] border rounded-lg px-3 py-2 mb-4 bg-slate-50">
@@ -48,7 +39,7 @@ export default function SentenceBuilder({ meta }) {
         {shuffled.map((w, i) => (
           <button
             key={i}
-            onClick={() => handleWordClick(w, i)}
+            onClick={() => handleWordClick(w)}
             className={`px-4 py-2 rounded-lg border transition ${
               selected.includes(w)
                 ? status === "wrong"
@@ -62,29 +53,14 @@ export default function SentenceBuilder({ meta }) {
         ))}
       </div>
 
-      {/* кнопки действий */}
-      <div className="flex gap-3 mb-8">
-        <button
-          onClick={handleReset}
-          className="flex-1 px-6 py-2 rounded-lg border bg-white hover:bg-slate-100"
-        >
-          🔄 Reset
-        </button>
-        <button
-          onClick={handleCheck}
-          className="flex-1 px-6 py-2 rounded-lg border bg-green-100 hover:bg-green-200"
-        >
-          ✅ Check
-        </button>
-        <button
-          onClick={handleSkip}
-          className="flex-1 px-6 py-2 rounded-lg border bg-yellow-100 hover:bg-yellow-200"
-        >
-          ⏭️ Skip
-        </button>
-      </div>
+      <button
+        onClick={handleCheck}
+        className="btn btn-primary"
+      >
+        Check
+      </button>
 
-      {/* футер */}
+      {/* meta под самой игрой */}
       <div className="mt-6">{meta}</div>
     </div>
   );
