@@ -13,6 +13,8 @@ import FillTheGap from "./games/FillTheGap.jsx";
 
 // Страница обучения слов
 import LearnWords from "./pages/LearnWords.jsx";
+import Home from "./Home";        // твоя главная страница с играми
+import LearnWords from "./LearnWords";  // страница для изучения слов
 
 function Menu() {
   // карточки меню
