@@ -38,11 +38,16 @@ export default function App() {
         {view === "type"        && <TypeTheWord   pairs={pairs} meta={meta} />}
         {view === "builder"     && <SentenceBuilder           meta={meta} />}
         {view === "fill"        && <FillTheGap      meta={meta} />}
+        {view === "learn"       && <LearnWords pairs={pairs} onStart={(id)=>setView(id)} />}
 
         {/* фиксированный футер */}
         <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
           {meta}
         </div>
+        {/* top-right learn button */}
+<div className="fixed top-3 right-3 z-50">
+  <button className="btn" onClick={() => setView("learn")}>📚 Learn words</button>
+</div>
       </div>
     );
   }
