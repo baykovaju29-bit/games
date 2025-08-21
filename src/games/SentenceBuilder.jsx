@@ -15,22 +15,14 @@ const SAMPLE = [
   "I wish I had more free time.",
 ];
 
-// --- Токенизация ---
+// --- Токенизация: убираем конечную точку/!/? и режем по пробелам ---
 function tokenize(sentence) {
-  const cleaned = (sentence || "")
-    .trim()
-    .replace(/[.?!…]+$/u, ""); // УДАЛЯЕМ конечный знак
+  const cleaned = (sentence || "").trim().replace(/[.?!…]+$/u, "");
   const parts = cleaned.split(/\s+/);
   return parts.map((t, idx) => ({ t, id: `${idx}:${t}` }));
 }
-
 function normalizeTokens(tokens) {
-  return tokens
-    .map((x) => x.t)
-    .join(" ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
+  return tokens.map(x => x.t).join(" ").replace(/\s+/g, " ").trim().toLowerCase();
 }
 
 export default function SentenceBuilder({ items = SAMPLE, meta }) {
@@ -43,24 +35,25 @@ export default function SentenceBuilder({ items = SAMPLE, meta }) {
   const [answered, setAnswered] = useState(0);
   const [message, setMessage] = useState("");
 
-  const [wrongPulse, setWrongPulse] = useState(false);  // красная подсветка/тряска при ошибке
-  const [okFlash, setOkFlash] = useState(false);        // зелёная вспышка на Check
+  // визуальные эффекты
+  const [wrongPulse, setWrongPulse] = useState(false);
+  const [okFlash, setOkFlash] = useState(false);
 
   const target = deck[i] || "";
   const targetTokens = useMemo(() => tokenize(target), [target]);
 
-  // Лоток = перемешанные целевые токены минус уже выбранные
+  // Лоток (Tiles): перемешанные токены минус те, что уже выбраны
   const tray = useMemo(() => {
     const shuffled = shuffle(targetTokens);
-    const used = new Set(answer.map((x) => x.id));
-    return shuffled.filter((x) => !used.has(x.id));
+    const used = new Set(answer.map(x => x.id));
+    return shuffled.filter(x => !used.has(x.id));
   }, [targetTokens, answer]);
 
   function pick(tokenObj) {
-    setAnswer((a) => [...a, tokenObj]);
+    setAnswer(a => [...a, tokenObj]);
   }
   function undo(idx) {
-    setAnswer((a) => a.filter((_, j) => j !== idx));
+    setAnswer(a => a.filter((_, j) => j !== idx));
   }
 
   function resetCurrent() {
@@ -69,19 +62,17 @@ export default function SentenceBuilder({ items = SAMPLE, meta }) {
     setWrongPulse(false);
     setOkFlash(false);
   }
-
   function next() {
-    setI((n) => (n + 1) % deck.length);
+    setI(n => (n + 1) % deck.length);
     resetCurrent();
   }
-
   function check() {
     const ok = normalizeTokens(answer) === normalizeTokens(targetTokens);
-    setAnswered((n) => n + 1);
+    setAnswered(n => n + 1);
 
     if (ok) {
-      setScore((s) => s + 1);
-      setStreak((st) => st + 1);
+      setScore(s => s + 1);
+      setStreak(st => st + 1);
       setMessage("✅ Correct!");
       setOkFlash(true);
       setTimeout(() => setOkFlash(false), 600);
@@ -103,9 +94,8 @@ export default function SentenceBuilder({ items = SAMPLE, meta }) {
     <Page
       title="Sentence Builder"
       subtitle="Tap words in order to build a correct sentence. (No dot at the end needed)"
-      // убрали верхние кнопки — теперь они стоят справа от Tiles
     >
-      {/* Статы: 4 в ряд на мобилке */}
+      {/* Статистика: 4 в ряд даже на телефоне */}
       <div className="grid grid-cols-4 gap-2 md:gap-3 mb-6">
         <Stat label="Sentence" value={`${i + 1}/${deck.length}`} />
         <Stat label="Score" value={score} />
@@ -118,33 +108,33 @@ export default function SentenceBuilder({ items = SAMPLE, meta }) {
         Arrange the shuffled tiles to form a correct sentence.
       </div>
 
-      {/* Рабочая зона: Tiles (уменьшено) + вертикальный столбец кнопок справа */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {/* LEFT: ответ игрока */}
-        <div className={"card card-pad mb-1 md:mb-0 " + (wrongPulse ? "animate-shake" : "")}>
-          <div className="sub mb-2">Your sentence</div>
-          <div className="flex flex-wrap gap-2">
-            {answer.length === 0 && (
-              <span className="text-slate-400">Tap tiles below…</span>
-            )}
-            {answer.map((x, idx) => (
-              <button
-                key={"a" + x.id + idx}
-                onClick={() => undo(idx)}
-                className={"btn " + (wrongPulse ? "bg-rose-50 border-rose-200" : "")}
-                title="Remove this token"
-              >
-                {x.t}
-              </button>
-            ))}
-          </div>
+      {/* Ответ игрока */}
+      <div className={"card card-pad mb-4 " + (wrongPulse ? "animate-shake" : "")}>
+        <div className="sub mb-2">Your sentence</div>
+        <div className="flex flex-wrap gap-2">
+          {answer.length === 0 && (
+            <span className="text-slate-400">Tap tiles below…</span>
+          )}
+          {answer.map((x, idx) => (
+            <button
+              key={"a" + x.id + idx}
+              onClick={() => undo(idx)}
+              className={"btn " + (wrongPulse ? "bg-rose-50 border-rose-200" : "")}
+              title="Remove this token"
+            >
+              {x.t}
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* MIDDLE: Tiles — уменьшили ширину до 2/3 всего ряда (занимает 1 колонку из 2 левых) */}
-        <div className="card card-pad md:col-span-1">
+      {/* ОДНА ЛИНИЯ: Tiles (flex-1, чуть уже) + кнопки справа В РЯД */}
+      <div className="flex items-start gap-3 md:gap-4 flex-wrap">
+        {/* Tiles */}
+        <div className="card card-pad flex-1 min-w-[60%]">
           <div className="sub mb-2">Tiles</div>
           <div className="flex flex-wrap gap-2">
-            {tray.map((x) => (
+            {tray.map(x => (
               <button
                 key={x.id}
                 onClick={() => pick(x)}
@@ -157,23 +147,17 @@ export default function SentenceBuilder({ items = SAMPLE, meta }) {
           </div>
         </div>
 
-        {/* RIGHT: вертикальная панель с кнопками */}
-        <div className="card card-pad flex items-stretch">
-          <div className="flex flex-col gap-2 w-full">
-            <button className="btn w-full" onClick={resetCurrent}>
-              🔄 Reset
-            </button>
-            <button
-              className={"btn btn-primary w-full " + (okFlash ? "flash-success" : "")}
-              onClick={check}
-              disabled={answer.length === 0}
-            >
-              ✅ Check
-            </button>
-            <button className="btn w-full" onClick={next}>
-              ⏭️ Skip
-            </button>
-          </div>
+        {/* Кнопки справа — в одну строку; на узких экранах перенесутся ниже */}
+        <div className="flex gap-2 shrink-0">
+          <button className="btn" onClick={resetCurrent}>Reset</button>
+          <button
+            className={"btn btn-primary " + (okFlash ? "flash-success" : "")}
+            onClick={check}
+            disabled={answer.length === 0}
+          >
+            Check
+          </button>
+          <button className="btn" onClick={next}>Skip</button>
         </div>
       </div>
 
