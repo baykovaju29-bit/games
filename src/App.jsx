@@ -22,7 +22,7 @@ export default function App() {
     </div>
   );
 
-  // ===== Экран отдельной игры =====
+  // ===== Экран отдельной игры - Блок рендера экранов =====
   if (view !== "menu") {
     return (
       <div className="min-h-screen py-6">
@@ -35,6 +35,7 @@ export default function App() {
         {view === "quiz"        && <Quiz          pairs={pairs} meta={meta} />}
         {view === "type"        && <TypeTheWord   pairs={pairs} meta={meta} />}
         {view === "builder"     && <SentenceBuilder           meta={meta} />}
+        {view === "fill"        && <FillTheGap      meta={meta} />}
 
         {/* фиксированный футер */}
         <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
@@ -54,6 +55,7 @@ export default function App() {
 
   const GRAMMAR_GAMES = [
     { id: "builder",    icon:"🧱", title:"Sentence Builder", desc:"Arrange words to form a sentence" },
+    { id: "fill", icon:"✍️", title:"Fill the Gap", desc:"Type the missing word" },
     // позже можно добавить: Fill the Gap, Grammar Auction, Tense Duel и т.д.
   ];
 
