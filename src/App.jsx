@@ -13,25 +13,23 @@ import FillTheGap from "./games/FillTheGap.jsx";
 
 // Страница обучения слов
 import LearnWords from "./pages/LearnWords.jsx";
-import Home from "./Home";        // твоя главная страница с играми
-import LearnWords from "./LearnWords";  // страница для изучения слов
 
+/* ---------- Внутренний компонент: главное меню ---------- */
 function Menu() {
-  // карточки меню
-  const VOCAB_GAMES = [
+  const VOCAB = [
     { to: "/matching",   icon: "🧩", title: "Matching",       desc: "Match words to definitions" },
     { to: "/flashcards", icon: "🃏", title: "Flashcards",     desc: "Flip to reveal" },
     { to: "/quiz",       icon: "❓", title: "Quiz",           desc: "Multiple choice" },
-    { to: "/type",       icon: "⌨️", title: "Type the Word",  desc: "Type from definition" },
+    { to: "/type",       icon: "⌨️", title: "Type the Word",  desc: "Type from definition" }
   ];
-  const GRAMMAR_GAMES = [
-    { to: "/builder",    icon: "🧱", title: "Sentence Builder", desc: "Arrange words to form a sentence" },
-    { to: "/fill",       icon: "✍️", title: "Fill the Gap",     desc: "Type the missing word" },
+  const GRAMMAR = [
+    { to: "/builder", icon: "🧱", title: "Sentence Builder", desc: "Arrange words to form a sentence" },
+    { to: "/fill",    icon: "✍️", title: "Fill the Gap",     desc: "Type the missing word" }
   ];
 
   return (
     <div className="container max-w-5xl py-6">
-      {/* Кнопка Learn words справа сверху */}
+      {/* Верхняя панель с кнопкой Learn */}
       <div className="flex justify-end mb-6">
         <Link to="/learn" className="btn">📚 Learn words</Link>
       </div>
@@ -40,8 +38,8 @@ function Menu() {
       <h1 className="h1">🎮 Vocabulary Games</h1>
       <p className="sub mt-1">Choose a game to practice the same word list.</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
-        {VOCAB_GAMES.map((g) => (
-          <Link key={g.to} to={g.to} className="card card-pad text-left hover:bg-slate-50 transition">
+        {VOCAB.map(g => (
+          <Link key={g.to} to={g.to} className="card card-pad text-left hover:bg-slate-50 active:scale-[0.99] transition">
             <div className="text-lg font-semibold">{g.icon} {g.title}</div>
             <div className="sub">{g.desc}</div>
           </Link>
@@ -52,8 +50,8 @@ function Menu() {
       <h2 className="h1 mt-12">📘 Grammar Games</h2>
       <p className="sub mt-1">Practice sentence structure and grammar rules.</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
-        {GRAMMAR_GAMES.map((g) => (
-          <Link key={g.to} to={g.to} className="card card-pad text-left hover:bg-slate-50 transition">
+        {GRAMMAR.map(g => (
+          <Link key={g.to} to={g.to} className="card card-pad text-left hover:bg-slate-50 active:scale-[0.99] transition">
             <div className="text-lg font-semibold">{g.icon} {g.title}</div>
             <div className="sub">{g.desc}</div>
           </Link>
@@ -63,6 +61,7 @@ function Menu() {
   );
 }
 
+/* ---------- Основное приложение с роутами ---------- */
 export default function App() {
   const { pairs, source, error, updatedAt } = usePairsData();
 
@@ -74,30 +73,94 @@ export default function App() {
     </div>
   );
 
+  // Обёртка для экранов игр: Back + Learn сверху, meta снизу
+  const GameScreen = ({ children }) => (
+    <div className="min-h-screen py-6">
+      <div className="container mb-4 flex items-center justify-between gap-2">
+        <Link to="/" className="btn">← Back to menu</Link>
+        <Link to="/learn" className="btn">📚 Learn words</Link>
+      </div>
+
+      {children}
+
+      <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
+        {meta}
+      </div>
+    </div>
+  );
+
   return (
     <Router>
-      <div className="min-h-screen py-6">
-        <Routes>
-          {/* Главная страница с разделами */}
-          <Route path="/" element={<Menu />} />
+      <Routes>
+        {/* Главная (меню) */}
+        <Route path="/" element={<Menu />} />
 
-          {/* Игры по отдельным ссылкам */}
-          <Route path="/matching"   element={<Matching pairs={pairs} meta={meta} />} />
-          <Route path="/flashcards" element={<Flashcards pairs={pairs} meta={meta} />} />
-          <Route path="/quiz"       element={<Quiz pairs={pairs} meta={meta} />} />
-          <Route path="/type"       element={<TypeTheWord pairs={pairs} meta={meta} />} />
-          <Route path="/builder"    element={<SentenceBuilder meta={meta} />} />
-          <Route path="/fill"       element={<FillTheGap meta={meta} />} />
+        {/* Страница Learn words (отдельный URL) */}
+        <Route
+          path="/learn"
+          element={
+            <div className="min-h-screen py-6">
+              <div className="container mb-4">
+                <Link to="/" className="btn">← Back to menu</Link>
+              </div>
+              <LearnWords pairs={pairs} onStart={(path)=>{ /* пример: стартовать флешкарты */ }} />
+              <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
+                {meta}
+              </div>
+            </div>
+          }
+        />
 
-          {/* Новая страница Learn words по отдельному URL */}
-          <Route path="/learn"      element={<LearnWords pairs={pairs} onStartPath="/flashcards" />} />
-        </Routes>
-
-        {/* фиксированный футер внизу справа */}
-        <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
-          {meta}
-        </div>
-      </div>
+        {/* Игры — каждая со своей ссылкой */}
+        <Route
+          path="/matching"
+          element={
+            <GameScreen>
+              <Matching pairs={pairs} meta={meta} />
+            </GameScreen>
+          }
+        />
+        <Route
+          path="/flashcards"
+          element={
+            <GameScreen>
+              <Flashcards pairs={pairs} meta={meta} />
+            </GameScreen>
+          }
+        />
+        <Route
+          path="/quiz"
+          element={
+            <GameScreen>
+              <Quiz pairs={pairs} meta={meta} />
+            </GameScreen>
+          }
+        />
+        <Route
+          path="/type"
+          element={
+            <GameScreen>
+              <TypeTheWord pairs={pairs} meta={meta} />
+            </GameScreen>
+          }
+        />
+        <Route
+          path="/builder"
+          element={
+            <GameScreen>
+              <SentenceBuilder meta={meta} />
+            </GameScreen>
+          }
+        />
+        <Route
+          path="/fill"
+          element={
+            <GameScreen>
+              <FillTheGap meta={meta} />
+            </GameScreen>
+          }
+        />
+      </Routes>
     </Router>
   );
 }
