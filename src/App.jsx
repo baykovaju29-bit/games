@@ -7,6 +7,7 @@ import Flashcards from "./games/Flashcards.jsx";
 import Quiz from "./games/Quiz.jsx";
 import TypeTheWord from "./games/TypeTheWord.jsx";
 import SentenceBuilder from "./games/SentenceBuilder.jsx";
+import FillTheGap from "./games/FillTheGap.jsx";
 
 export default function App() {
   const { pairs, source, error, updatedAt } = usePairsData();
@@ -34,6 +35,7 @@ export default function App() {
         {view === "quiz"        && <Quiz          pairs={pairs} meta={meta} />}
         {view === "type"        && <TypeTheWord   pairs={pairs} meta={meta} />}
         {view === "builder"     && <SentenceBuilder           meta={meta} />}
+        {view === "gap"         && <FillTheGap    pairs={pairs} meta={meta} />}
 
         {/* фиксированный футер */}
         <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
@@ -54,6 +56,8 @@ export default function App() {
   const GRAMMAR_GAMES = [
     { id: "builder",    icon:"🧱", title:"Sentence Builder", desc:"Arrange words to form a sentence" },
     // позже можно добавить: Fill the Gap, Grammar Auction, Tense Duel и т.д.
+    { id: "gap",        icon:"✏️", title:"Fill the Gap",       desc:"Insert the missing word" },
+    // позже можно добавить: Grammar Auction, Tense Duel и т.д.
   ];
 
   return (
@@ -79,25 +83,3 @@ export default function App() {
         {/* ------- Grammar Section ------- */}
         <h2 className="h1 mt-12">📘 Grammar Games</h2>
         <p className="sub mt-1">Practice sentence structure and grammar rules.</p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
-          {GRAMMAR_GAMES.map(g => (
-            <button
-              key={g.id}
-              className="card card-pad text-left hover:bg-slate-50 active:scale-[0.99] transition"
-              onClick={()=>setView(g.id)}
-            >
-              <div className="text-lg font-semibold">{g.icon} {g.title}</div>
-              <div className="sub">{g.desc}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* фиксированный футер внизу справа */}
-      <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
-        {meta}
-      </div>
-    </div>
-  );
-}
