@@ -16,8 +16,6 @@ const SAMPLE = [
 ];
 
 // --- Токенизация ---
-// Убираем конечную точку/!/? из конца предложения (ставить не нужно),
-// затем разбиваем по пробелам. Внутренние запятые оставляем как есть.
 function tokenize(sentence) {
   const cleaned = (sentence || "")
     .trim()
@@ -45,8 +43,8 @@ export default function SentenceBuilder({ items = SAMPLE, meta }) {
   const [answered, setAnswered] = useState(0);
   const [message, setMessage] = useState("");
 
-  const [wrongPulse, setWrongPulse] = useState(false);  // для красной подсветки/тряски
-  const [okFlash, setOkFlash] = useState(false);        // для зелёной вспышки на кнопке Check
+  const [wrongPulse, setWrongPulse] = useState(false);  // красная подсветка/тряска при ошибке
+  const [okFlash, setOkFlash] = useState(false);        // зелёная вспышка на Check
 
   const target = deck[i] || "";
   const targetTokens = useMemo(() => tokenize(target), [target]);
@@ -78,51 +76,34 @@ export default function SentenceBuilder({ items = SAMPLE, meta }) {
   }
 
   function check() {
-    const ok =
-      normalizeTokens(answer) === normalizeTokens(targetTokens);
-
+    const ok = normalizeTokens(answer) === normalizeTokens(targetTokens);
     setAnswered((n) => n + 1);
 
     if (ok) {
       setScore((s) => s + 1);
       setStreak((st) => st + 1);
       setMessage("✅ Correct!");
-
-      // зелёная мягкая вспышка на кнопке Check
       setOkFlash(true);
       setTimeout(() => setOkFlash(false), 600);
-
-      // быстрый переход к следующему
       setTimeout(() => next(), 700);
     } else {
       setStreak(0);
       setMessage("❌ Try again");
-
-      // покрасить ответ и встряхнуть, затем вернуть фишки
       setWrongPulse(true);
       setTimeout(() => {
         setWrongPulse(false);
-        setAnswer([]); // вернуть фишки обратно в лоток
+        setAnswer([]); // вернуть фишки в лоток
       }, 350);
     }
   }
 
-  const accuracy =
-    answered > 0 ? Math.round((score / answered) * 100) + "%" : "—";
+  const accuracy = answered > 0 ? Math.round((score / answered) * 100) + "%" : "—";
 
   return (
     <Page
       title="Sentence Builder"
       subtitle="Tap words in order to build a correct sentence. (No dot at the end needed)"
-      right={
-        <div className="flex gap-2">
-          <button className="btn" onClick={resetCurrent}>Reset</button>
-          <button className={"btn btn-primary " + (okFlash ? "flash-success" : "")} onClick={check} disabled={answer.length === 0}>
-            Check
-          </button>
-          <button className="btn" onClick={next}>Skip</button>
-        </div>
-      }
+      // убрали верхние кнопки — теперь они стоят справа от Tiles
     >
       {/* Статы: 4 в ряд на мобилке */}
       <div className="grid grid-cols-4 gap-2 md:gap-3 mb-6">
@@ -132,48 +113,67 @@ export default function SentenceBuilder({ items = SAMPLE, meta }) {
         <Stat label="Accuracy" value={accuracy} />
       </div>
 
-      {/* Подсказка */}
+      {/* Подсказка над рабочей зоной */}
       <div className="card card-pad sub mb-3">
         Arrange the shuffled tiles to form a correct sentence.
       </div>
 
-      {/* Ответ игрока — подсветка/тряска при ошибке */}
-      <div className={"card card-pad mb-4 " + (wrongPulse ? "animate-shake" : "")}>
-        <div className="sub mb-2">Your sentence</div>
-        <div className="flex flex-wrap gap-2">
-          {answer.length === 0 && (
-            <span className="text-slate-400">Tap tiles below…</span>
-          )}
-          {answer.map((x, idx) => (
-            <button
-              key={"a" + x.id + idx}
-              onClick={() => undo(idx)}
-              className={
-                "btn " +
-                (wrongPulse ? "bg-rose-50 border-rose-200" : "")
-              }
-              title="Remove this token"
-            >
-              {x.t}
-            </button>
-          ))}
+      {/* Рабочая зона: Tiles (уменьшено) + вертикальный столбец кнопок справа */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* LEFT: ответ игрока */}
+        <div className={"card card-pad mb-1 md:mb-0 " + (wrongPulse ? "animate-shake" : "")}>
+          <div className="sub mb-2">Your sentence</div>
+          <div className="flex flex-wrap gap-2">
+            {answer.length === 0 && (
+              <span className="text-slate-400">Tap tiles below…</span>
+            )}
+            {answer.map((x, idx) => (
+              <button
+                key={"a" + x.id + idx}
+                onClick={() => undo(idx)}
+                className={"btn " + (wrongPulse ? "bg-rose-50 border-rose-200" : "")}
+                title="Remove this token"
+              >
+                {x.t}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Лоток */}
-      <div className="card card-pad">
-        <div className="sub mb-2">Tiles</div>
-        <div className="flex flex-wrap gap-2">
-          {tray.map((x) => (
-            <button
-              key={x.id}
-              onClick={() => pick(x)}
-              className="btn"
-              title="Add token"
-            >
-              {x.t}
+        {/* MIDDLE: Tiles — уменьшили ширину до 2/3 всего ряда (занимает 1 колонку из 2 левых) */}
+        <div className="card card-pad md:col-span-1">
+          <div className="sub mb-2">Tiles</div>
+          <div className="flex flex-wrap gap-2">
+            {tray.map((x) => (
+              <button
+                key={x.id}
+                onClick={() => pick(x)}
+                className="btn"
+                title="Add token"
+              >
+                {x.t}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* RIGHT: вертикальная панель с кнопками */}
+        <div className="card card-pad flex items-stretch">
+          <div className="flex flex-col gap-2 w-full">
+            <button className="btn w-full" onClick={resetCurrent}>
+              🔄 Reset
             </button>
-          ))}
+            <button
+              className={"btn btn-primary w-full " + (okFlash ? "flash-success" : "")}
+              onClick={check}
+              disabled={answer.length === 0}
+            >
+              ✅ Check
+            </button>
+            <button className="btn w-full" onClick={next}>
+              ⏭️ Skip
+            </button>
+          </div>
         </div>
       </div>
 
