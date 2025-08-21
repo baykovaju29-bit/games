@@ -10,9 +10,9 @@ import SentenceBuilder from "./games/SentenceBuilder.jsx";
 
 export default function App() {
   const { pairs, source, error, updatedAt } = usePairsData();
-  const [view, setView] = useState("menu"); // "menu" или id игры
+  const [view, setView] = useState("menu"); // "menu" or game ID
 
-  // фиксированная строка внизу справа
+  // fixed footer text in bottom-right
   const meta = (
     <div className="text-xs text-slate-500">
       Source: <span className="font-mono">{source || "/data.txt"}</span>
@@ -21,7 +21,7 @@ export default function App() {
     </div>
   );
 
-  // ===== Экран отдельной игры =====
+  // ===== Single game screen =====
   if (view !== "menu") {
     return (
       <div className="min-h-screen py-6">
@@ -35,7 +35,7 @@ export default function App() {
         {view === "type"        && <TypeTheWord   pairs={pairs} meta={meta} />}
         {view === "builder"     && <SentenceBuilder           meta={meta} />}
 
-        {/* фиксированный футер */}
+        {/* fixed footer */}
         <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
           {meta}
         </div>
@@ -43,7 +43,7 @@ export default function App() {
     );
   }
 
-  // ===== Меню: две секции (Vocabulary + Grammar) =====
+  // ===== Menu: two sections (Vocabulary + Grammar) =====
   const VOCAB_GAMES = [
     { id: "matching",   icon:"🧩", title:"Matching",      desc:"Match words to definitions" },
     { id: "flashcards", icon:"🃏", title:"Flashcards",    desc:"Flip to reveal" },
@@ -53,7 +53,7 @@ export default function App() {
 
   const GRAMMAR_GAMES = [
     { id: "builder",    icon:"🧱", title:"Sentence Builder", desc:"Arrange words to form a sentence" },
-    // позже можно добавить: Fill the Gap, Grammar Auction, Tense Duel и т.д.
+    // more games can be added later: Fill the Gap, Grammar Auction, Tense Duel, etc.
   ];
 
   return (
@@ -94,7 +94,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* фиксированный футер внизу справа */}
+      {/* fixed footer in bottom-right */}
       <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
         {meta}
       </div>

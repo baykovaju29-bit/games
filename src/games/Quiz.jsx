@@ -5,9 +5,9 @@ import { shuffle } from "../utils";
 
 export default function Quiz({ pairs = [], meta }) {
   const deck = useMemo(() => shuffle(pairs), [pairs]);
-  const [i, setI] = useState(0);              // текущий вопрос (index)
-  const [score, setScore] = useState(0);      // верные ответы
-  const [answered, setAnswered] = useState(0);// всего отвечено
+  const [i, setI] = useState(0);              // current question index
+  const [score, setScore] = useState(0);      // correct answers count
+  const [answered, setAnswered] = useState(0);// total answered
   const [msg, setMsg] = useState("");
 
   const q = deck[i];

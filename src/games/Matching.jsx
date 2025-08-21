@@ -49,7 +49,7 @@ export default function Matching({ pairs=[], meta }) {
         </div>
       }
     >
-            {/* Статистика: на мобилке 4 в ряд, компактный вид */}
+            {/* Stats: 4 in a row on mobile, compact view */}
       <div className="grid grid-cols-4 gap-2 md:gap-3 mb-6">
         <Stat label="Score"    value={score} />
         <Stat label="Streak"   value={streak} />

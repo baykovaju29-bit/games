@@ -4,7 +4,7 @@ import Stat from "../ui/Stat.jsx";
 import { shuffle } from "../utils";
 import Papa from "papaparse";
 
-// --- Токенизация (убираем финальную точку/знак, разбиваем на слова) ---
+// --- Tokenization (remove final punctuation and split into words) ---
 function tokenize(sentence) {
   const cleaned = (sentence || "")
     .trim()
@@ -34,7 +34,7 @@ export default function SentenceBuilder({ meta }) {
   const [wrongPulse, setWrongPulse] = useState(false);
   const [okFlash, setOkFlash] = useState(false);
 
-  // Загружаем CSV с предложениями
+  // Load CSV with sentences
   useEffect(() => {
     fetch("/data.csv")
       .then(res => res.text())
@@ -45,11 +45,11 @@ export default function SentenceBuilder({ meta }) {
       });
   }, []);
 
-  // Текущее предложение
+  // Current sentence
   const current = deck[i] || {};
   const targetTokens = useMemo(() => tokenize(current.sentence || ""), [current]);
 
-  // Лоток = перемешанные токены минус выбранные
+  // Tray = shuffled tokens minus chosen ones
   const tray = useMemo(() => {
     const shuffled = shuffle(targetTokens);
     const used = new Set(answer.map((x) => x.id));
@@ -115,7 +115,7 @@ export default function SentenceBuilder({ meta }) {
       subtitle="Tap words in order to build a correct sentence. (No dot at the end needed)"
       right={null}
     >
-      {/* Статы */}
+      {/* Stats */}
       <div className="grid grid-cols-4 gap-2 md:gap-3 mb-6">
         <Stat label="Sentence" value={`${i + 1}/${deck.length}`} />
         <Stat label="Score" value={score} />
@@ -123,12 +123,12 @@ export default function SentenceBuilder({ meta }) {
         <Stat label="Accuracy" value={accuracy} />
       </div>
 
-      {/* Показ времени */}
+      {/* Tense display */}
       <div className="card card-pad sub mb-3">
         <strong>Tense:</strong> {current.tense}
       </div>
 
-      {/* Ответ игрока */}
+      {/* Player's answer */}
       <div className={"card card-pad mb-4 " + (wrongPulse ? "animate-shake" : "")}>
         <div className="sub mb-2">Your sentence</div>
         <div className="flex flex-wrap gap-2">
@@ -150,7 +150,7 @@ export default function SentenceBuilder({ meta }) {
         </div>
       </div>
 
-      {/* Лоток + кнопки справа */}
+      {/* Tray + buttons on the right */}
       <div className="flex gap-4">
         <div className="card card-pad flex-1">
           <div className="sub mb-2">Tiles</div>

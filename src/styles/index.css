@@ -36,14 +36,14 @@ html, body, #root { height: 100%; }
   .backface-hidden  { backface-visibility: hidden; }
   .rotate-y-180     { transform: rotateY(180deg); }
 
-  /* Мягкая зелёная вспышка (успех) */
+  /* Soft green flash (success) */
   .flash-success { animation: flash-success 600ms ease-out; }
   @keyframes flash-success {
     0%   { background-color: rgba(16,185,129,0.15); }
     100% { background-color: transparent; }
   }
 
-  /* Лёгкая тряска (ошибка) */
+  /* Gentle shake (error) */
   .animate-shake { animation: shake 300ms ease-in-out; }
   @keyframes shake {
     0%,100% { transform: translateX(0); }
