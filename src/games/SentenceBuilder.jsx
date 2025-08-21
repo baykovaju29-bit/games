@@ -6,7 +6,7 @@ export default function SentenceBuilder({ meta }) {
   const [selected, setSelected] = useState([]);
   const [status, setStatus] = useState(null); // "correct" | "wrong" | null
 
-  const handleWordClick = (word) => {
+  const handleWordClick = (word, index) => {
     if (selected.includes(word)) return; // уже выбрали
     setSelected([...selected, word]);
   };
@@ -48,7 +48,7 @@ export default function SentenceBuilder({ meta }) {
         {shuffled.map((w, i) => (
           <button
             key={i}
-            onClick={() => handleWordClick(w)}
+            onClick={() => handleWordClick(w, i)}
             className={`px-4 py-2 rounded-lg border transition ${
               selected.includes(w)
                 ? status === "wrong"
@@ -83,6 +83,9 @@ export default function SentenceBuilder({ meta }) {
           ⏭️ Skip
         </button>
       </div>
+
+      {/* футер */}
+      <div className="mt-6">{meta}</div>
     </div>
   );
 }
