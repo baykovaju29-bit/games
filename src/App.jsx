@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import "./styles/index.css";
 import { usePairsData } from "./dataHook";
+import GameScreen from "./ui/GameScreen.jsx";
 
 // Игры
 import Matching from "./games/Matching.jsx";
