@@ -82,7 +82,7 @@ export default function FillTheGap({ meta }) {
   function check() {
     if (!gap) return;
     const correct = norm(value) === norm(gap);
-    const term = gap; // для прогресса считаем терминой само пропущенное слово
+    const term = gap;
     setAnswered(n => n + 1);
 
     if (correct) {
@@ -139,12 +139,12 @@ export default function FillTheGap({ meta }) {
           className="flex-1 card px-3 py-2 outline-none"
         />
         <div className="flex gap-2">
-          <button className="btn" onClick={hint}>Hint</button>
-          <button className="btn" onClick={reveal}>Reveal</button>
-          <button className={"btn btn-primary " + (okFlash ? "flash-success" : "")} onClick={check} disabled={!value.trim()}>
+          <button type="button" className="btn" onClick={hint}>Hint</button>
+          <button type="button" className="btn" onClick={reveal}>Reveal</button>
+          <button type="button" className={"btn btn-primary " + (okFlash ? "flash-success" : "")} onClick={check} disabled={!value.trim()}>
             Check
           </button>
-          <button className="btn" onClick={next}>Skip</button>
+          <button type="button" className="btn" onClick={next}>Skip</button>
         </div>
       </div>
 
