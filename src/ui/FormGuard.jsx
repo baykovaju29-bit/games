@@ -1,16 +1,8 @@
 import { useEffect } from "react";
 
-/**
- * Глобально предотвращает submit любых форм,
- * чтобы ни один скрытый <form> не мог перезагрузить страницу.
- */
-export default function FormGuard() {
+export default function FormGuard(){
   useEffect(() => {
-    const handler = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-    // перехватываем все submit'ы на стадии capture
+    const handler = (e) => { e.preventDefault(); e.stopPropagation(); };
     document.addEventListener("submit", handler, true);
     return () => document.removeEventListener("submit", handler, true);
   }, []);
