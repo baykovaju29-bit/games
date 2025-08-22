@@ -57,8 +57,8 @@ export default function TypeTheWord({ pairs = [], meta }) {
           onKeyDown={e => e.key === "Enter" && check()}
         />
         <div className="flex gap-2">
-          <button className="btn" onClick={() => setI(n => (n + 1) % deck.length)}>Skip</button>
-          <button className="btn btn-primary" onClick={check} disabled={!value.trim()}>Check</button>
+          <button type="button" className="btn" onClick={() => setI(n => (n + 1) % deck.length)}>Skip</button>
+          <button type="button" className="btn btn-primary" onClick={check} disabled={!value.trim()}>Check</button>
         </div>
       </div>
 
