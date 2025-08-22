@@ -29,12 +29,28 @@ export function usePairsData() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const text = await res.text();
 
-        // парсим пары из data.txt (ожидание: term: definition в каждой строке)
-        const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        // --- НОВЫЙ НАДЁЖНЫЙ ПАРСЕР СТРОК ---
+        const lines = text
+          .split(/\r?\n/)
+          .map(s => s.trim())
+          .filter(Boolean);
+
+        // делим только по ПЕРВОМУ разделителю среди [: - – —] или таба
+        function splitOnce(line) {
+          const match = line.match(/\s*[:\-–—]\s*|\t/);
+          if (!match) return [line, ""]; // нет разделителя -> дефиниция пустая
+          const idx = match.index ?? 0;
+          const sepLen = match[0].length;
+          const left = line.slice(0, idx).trim();
+          const right = line.slice(idx + sepLen).trim();
+          return [left, right];
+        }
+
         const freshPairs = lines.map((line, i) => {
-          const m = line.split(/\s*[:\-–]\s*/); // term : def
-          return { term: m[0] || line, def: m.slice(1).join(": ") || "" , key: `p${i}` };
+          const [term, def] = splitOnce(line);
+          return { term, def, key: `p${i}` };
         });
+        // --- КОНЕЦ ПАРСЕРА ---
 
         const newHash = hashString(JSON.stringify(freshPairs));
 
@@ -70,7 +86,7 @@ export function usePairsData() {
     // Он НЕ будет менять pairs, если контент тот же.
     const id = setInterval(load, 30000); // раз в 30 сек
     return () => { cancelled = true; clearInterval(id); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // грузим и «наблюдаем», но не меняем ссылку без изменения контента
 
   return {
