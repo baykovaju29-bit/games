@@ -52,3 +52,33 @@ html, body, #root { height: 100%; }
     75%     { transform: translateX(-2px); }
   }
 }
+/* 3D flip card */
+.flip-outer {
+  perspective: 1200px; /* глубина */
+}
+
+.flip-inner {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 400ms ease;
+  cursor: pointer;
+  min-height: 120px; /* чтобы обе стороны не схлопывались */
+}
+
+.flip-rotated {
+  transform: rotateY(180deg);
+}
+
+.flip-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  backface-visibility: hidden; /* прячем обратную сторону */
+}
+
+.flip-back {
+  transform: rotateY(180deg);
+}
