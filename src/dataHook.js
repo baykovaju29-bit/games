@@ -57,11 +57,18 @@ export function usePairsData() {
         // если содержимое НЕ поменялось — не трогаем ссылку на pairs
         if (!cancelled) {
           if (state.hash === newHash) {
-            setState(prev => ({
-              ...prev,
-              updatedAt: new Date(),
-              error: null
-            }));
+  // ДАННЫЕ НЕ ПОМЕНЯЛИСЬ → НИЧЕГО НЕ ДЕЛАЕМ
+  // (никаких setState, чтобы не ререндерить App)
+} else {
+  pairsRef.current = freshPairs;
+  setState({
+    pairs: pairsRef.current,
+    source: "/data.txt",
+    updatedAt: new Date(),
+    error: null,
+    hash: newHash,
+  });
+}
           } else {
             pairsRef.current = freshPairs; // обновляем только при реальном изменении
             setState({
@@ -84,7 +91,8 @@ export function usePairsData() {
 
     // ❗ Если хочешь авто-подхват изменений файла — оставь аккуратный интервал.
     // Он НЕ будет менять pairs, если контент тот же.
-    const id = setInterval(load, 30000); // раз в 30 сек
+   // const id = setInterval(load, 30000);
+return () => { cancelled = true /*, clearInterval(id)*/ };// раз в 30 сек
     return () => { cancelled = true; clearInterval(id); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // грузим и «наблюдаем», но не меняем ссылку без изменения контента
