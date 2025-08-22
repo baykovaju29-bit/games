@@ -1,9 +1,5 @@
 import React from "react";
 
-/**
- * Универсальный контейнер страницы: НИЧЕГО не сабмитит.
- * Просто рисует заголовок/подзаголовок/правый блок.
- */
 export default function Page({ title, subtitle, right, children }) {
   return (
     <div className="container max-w-5xl">
