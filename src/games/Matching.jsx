@@ -74,6 +74,7 @@ export default function Matching({ pairs = [], meta }) {
           <div className="flex flex-col gap-2">
             {left.map(item => (
               <button
+                type="button"
                 key={item.id}
                 className={
                   "btn justify-start " +
@@ -94,6 +95,7 @@ export default function Matching({ pairs = [], meta }) {
           <div className="flex flex-col gap-2">
             {right.map(item => (
               <button
+                type="button"
                 key={item.id}
                 className={"btn justify-start " + (solved.has(item.id) ? "opacity-40 pointer-events-none " : "")}
                 onClick={() => pickRight(item)}
