@@ -63,7 +63,8 @@ function Menu() {
 
 /* ---------- Основное приложение с роутами ---------- */
 export default function App() {
-  const { pairs, source, error, updatedAt } = usePairsData();
+  const isGamePath = typeof window !== "undefined" && /^(?:\/matching|\/flashcards|\/quiz|\/type|\/builder|\/fill)\b/.test(window.location.pathname);
+  const { pairs, source, error, updatedAt } = usePairsData({ shouldPoll: !isGamePath, intervalMs: 30000 });
 
   const meta = (
     <div className="text-xs text-slate-500">
