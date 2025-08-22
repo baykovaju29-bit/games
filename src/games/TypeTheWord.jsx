@@ -1,61 +1,68 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Page from "../ui/Page.jsx";
 import Stat from "../ui/Stat.jsx";
-import { shuffle } from "../utils";
+import { recordResult } from "../lib/progress";
 
-const norm = s => (s||"").toLowerCase()
-  .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-  .replace(/\s+/g," ").trim();
-
-export default function TypeTheWord({ pairs=[], meta }) {
-  const deck = useMemo(()=>shuffle(pairs), [pairs]);
+export default function TypeTheWord({ pairs = [], meta }) {
+  const deck = useMemo(() => (pairs || []).filter(p => p?.term && p?.def), [pairs]);
   const [i, setI] = useState(0);
-  const [val, setVal] = useState("");
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [tries, setTries] = useState(0);
+  const [value, setValue] = useState("");
+  const [madeMistake, setMadeMistake] = useState(false);
   const [msg, setMsg] = useState("");
-  const q = deck[i];
 
-  function check(){
-    if (!q) return;
-    if (norm(val)===norm(q.term)) {
-      setScore(s=>s+1); setStreak(st=>st+1); setMsg("✅ Correct");
-      setTimeout(()=>{ setI(n=>(n+1)%deck.length); setVal(""); setTries(0); setMsg(""); }, 700);
-    } else { setStreak(0); setTries(t=>t+1); setMsg("❌ Try again"); }
+  const [score, setScore] = useState(0);
+  const [answered, setAnswered] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const accuracy = answered ? Math.round((score / answered) * 100) + "%" : "—";
+
+  useEffect(() => { setMadeMistake(false); setValue(""); setMsg(""); }, [i]);
+
+  if (!deck.length) return <div className="p-6">No data…</div>;
+  const item = deck[i];
+
+  function check() {
+    const correct = value.trim().toLowerCase() === item.term.trim().toLowerCase();
+    setAnswered(n => n + 1);
+    if (correct) {
+      setScore(s => s + 1);
+      setStreak(st => st + 1);
+      setMsg("✅ Correct");
+      recordResult({ term: item.term, correct: true, firstTry: !madeMistake, game: "type" });
+      setTimeout(() => setI(n => (n + 1) % deck.length), 500);
+    } else {
+      setStreak(0);
+      setMadeMistake(true);
+      setMsg("❌ Try again");
+      recordResult({ term: item.term, correct: false, firstTry: false, game: "type" });
+    }
   }
-  function hint(){ if(q){ const n=Math.min(1+tries, q.term.length); setVal(q.term.slice(0,n)); } }
 
   return (
-    <Page title="Type the Word" subtitle="Type the missing word from the definition.">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
-        <Stat label="Question" value={`${i+1}/${deck.length||0}`}/>
-        <Stat label="Score" value={score}/>
-        <Stat label="Streak" value={streak}/>
-        <Stat label="Tries" value={tries}/>
+    <Page title="Type the Word" subtitle="Type the word for the definition." right={null}>
+      <div className="grid grid-cols-4 gap-2 md:gap-3 mb-6">
+        <Stat label="Item" value={`${i + 1}/${deck.length}`} />
+        <Stat label="Score" value={score} />
+        <Stat label="Streak" value={streak} />
+        <Stat label="Accuracy" value={accuracy} />
       </div>
 
-      <div className="card card-pad text-lg mb-4">{q?.def || "—"}</div>
+      <div className="card card-pad mb-3 text-lg">{item.def}</div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
         <input
-          value={val}
-          onChange={e=>setVal(e.target.value)}
-          onKeyDown={e=>e.key==="Enter" && check()}
-          placeholder="Type the word…"
           className="flex-1 card px-3 py-2 outline-none"
+          placeholder="Type here…"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && check()}
         />
-        <button onClick={check} className="btn btn-primary">Check</button>
+        <div className="flex gap-2">
+          <button className="btn" onClick={() => setI(n => (n + 1) % deck.length)}>Skip</button>
+          <button className="btn btn-primary" onClick={check} disabled={!value.trim()}>Check</button>
+        </div>
       </div>
 
-      <div className="flex gap-2 mt-3">
-        <button onClick={hint} className="btn">Hint</button>
-        <button onClick={()=>setVal(q?.term||"")} className="btn">Reveal</button>
-        <button onClick={()=>{ setI(n=>(n+1)%deck.length); setVal(""); setTries(0); setMsg(""); }} className="btn">Skip</button>
-      </div>
-
-      {msg && <div className="text-center mt-3 sub">{msg}</div>}
-
+      {msg && <div className="text-center mt-2 sub">{msg}</div>}
       <div className="mt-4">{meta}</div>
     </Page>
   );
