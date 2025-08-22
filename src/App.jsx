@@ -79,6 +79,19 @@ export default function App() {
 
   return (
     <Router>
+      import FormGuard from "./ui/FormGuard.jsx";
+
+// ...
+return (
+  <Router>
+    <FormGuard />
+    <Routes>
+      {/* ...твои маршруты... */}
+    </Routes>
+    {/* футер meta ... */}
+  </Router>
+);
+
       <Routes>
         {/* Главная: меню */}
         <Route path="/" element={<Menu />} />
