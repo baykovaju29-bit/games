@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import Page from "../ui/Page.jsx";
 import Stat from "../ui/Stat.jsx";
-import { shuffle } from "../utils";
 import { recordResult } from "../lib/progress";
 
 export default function Flashcards({ pairs = [], meta }) {
@@ -43,7 +42,6 @@ export default function Flashcards({ pairs = [], meta }) {
     setStreak(0);
     setMadeMistake(true);
     recordResult({ term, correct: false, firstTry: false, game: "flashcards" });
-    // можно оставить карточку ещё раз или перейти дальше:
     setTimeout(next, 200);
   }
 
@@ -71,10 +69,10 @@ export default function Flashcards({ pairs = [], meta }) {
       </div>
 
       <div className="flex gap-2">
-        <button className="btn" onClick={() => setFace(f => (f === "term" ? "def" : "term"))}>Flip side</button>
-        <button className="btn" onClick={() => setFlipped(f => !f)}>Flip card</button>
-        <button className="btn btn-primary" onClick={know}>I knew it</button>
-        <button className="btn" onClick={dontKnow}>I didn’t know</button>
+        <button type="button" className="btn" onClick={() => setFace(f => (f === "term" ? "def" : "term"))}>Flip side</button>
+        <button type="button" className="btn" onClick={() => setFlipped(f => !f)}>Flip card</button>
+        <button type="button" className="btn btn-primary" onClick={know}>I knew it</button>
+        <button type="button" className="btn" onClick={dontKnow}>I didn’t know</button>
       </div>
 
       <div className="mt-4">{meta}</div>
