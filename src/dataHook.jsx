@@ -37,48 +37,49 @@ export function usePairsData() {
     let cancelled = false;
 
     async function load() {
-      try {
-        const res = await fetch("/data.txt", { cache: "no-cache" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const text = await res.text();
+      // ...
+try {
+  const res = await fetch("/data.txt", { cache: "no-cache" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
 
-        // надёжный парсер строк
-        const lines = text
-          .split(/\r?\n/)
-          .map((s) => s.trim())
-          .filter(Boolean);
+  const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
 
-        const freshPairs = lines.map((line, i) => {
-          const [term, def] = splitOnce(line);
-          return { term, def, key: `p${i}` };
-        });
+  function splitOnce(line) {
+    const match = line.match(/\s*[:\-–—]\s*|\t/);
+    if (!match) return [line, ""];
+    const idx = match.index ?? 0;
+    const sepLen = match[0].length;
+    const left = line.slice(0, idx).trim();
+    const right = line.slice(idx + sepLen).trim();
+    return [left, right];
+  }
 
-        const newHash = hashString(JSON.stringify(freshPairs));
+  const freshPairs = lines.map((line, i) => {
+    const [term, def] = splitOnce(line);
+    return { term, def, key: `p${i}` };
+  });
 
-        if (cancelled) return;
+  const newHash = hashString(JSON.stringify(freshPairs));
+  if (cancelled) return;
 
-        if (state.hash === newHash) {
-          // данные не поменялись — лишний ререндер не нужен
-          return;
-        } else {
-          pairsRef.current = freshPairs; // обновляем только при реальном изменении
-          setState({
-            pairs: pairsRef.current,
-            source: "/data.txt",
-            updatedAt: new Date(),
-            error: null,
-            hash: newHash,
-          });
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setState((prev) => ({
-            ...prev,
-            error: String(e?.message || e),
-            updatedAt: new Date(),
-          }));
-        }
-      }
+  if (state.hash !== newHash) {
+    pairsRef.current = freshPairs;
+    setState({
+      pairs: pairsRef.current,
+      source: "/data.txt",
+      updatedAt: new Date(),
+      error: null,
+      hash: newHash,
+    });
+  }
+} catch (e) {
+  // ⚠️ НИЧЕГО не сетим, если это ошибка загрузки — чтобы не ререндерить игры
+  // При желании можно логировать в консоль:
+  // console.warn("data.txt load error:", e);
+}
+// ...
+
     }
 
     load();
