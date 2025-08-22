@@ -5,7 +5,13 @@ import Papa from "papaparse";
 import { recordResult } from "../lib/progress";
 
 const norm = (s = "") =>
-  s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9'-\s]/gi, "").replace(/\s+/g, " ").trim();
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9'\-\s]/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const STOP = new Set(["the","a","an","and","or","but","to","in","on","at","for","of","with","by","as","is","are","am","was","were","be","been","being"]);
 

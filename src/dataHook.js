@@ -8,7 +8,8 @@ function hashString(s) {
   return String(h);
 }
 
-export function usePairsData() {
+export function usePairsData(options = {}) {
+  const { shouldPoll = true, intervalMs = 30000 } = options;
   const [state, setState] = useState({
     pairs: [],       // ВАЖНО: будем сохранять ссылку, если контент не менялся
     source: "/data.txt",
@@ -22,10 +23,11 @@ export function usePairsData() {
 
   useEffect(() => {
     let cancelled = false;
+    let timerId = null;
 
     async function load() {
       try {
-        const res = await fetch("/data.txt", { cache: "no-cache" });
+        const res = await fetch("/data.txt", { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const text = await res.text();
 
@@ -56,22 +58,24 @@ export function usePairsData() {
 
         // если содержимое НЕ поменялось — не трогаем ссылку на pairs
         if (!cancelled) {
-          if (state.hash === newHash) {
-            setState(prev => ({
-              ...prev,
-              updatedAt: new Date(),
-              error: null
-            }));
-          } else {
-            pairsRef.current = freshPairs; // обновляем только при реальном изменении
-            setState({
-              pairs: pairsRef.current,
-              source: "/data.txt",
-              updatedAt: new Date(),
-              error: null,
-              hash: newHash,
-            });
-          }
+          setState(prev => {
+            if (prev.hash === newHash) {
+              return {
+                ...prev,
+                updatedAt: new Date(),
+                error: null
+              };
+            } else {
+              pairsRef.current = freshPairs; // обновляем только при реальном изменении
+              return {
+                pairs: pairsRef.current,
+                source: "/data.txt",
+                updatedAt: new Date(),
+                error: null,
+                hash: newHash,
+              };
+            }
+          });
         }
       } catch (e) {
         if (!cancelled) {
@@ -80,14 +84,20 @@ export function usePairsData() {
       }
     }
 
+    // Первая загрузка всегда
     load();
 
-    // ❗ Если хочешь авто-подхват изменений файла — оставь аккуратный интервал.
-    // Он НЕ будет менять pairs, если контент тот же.
-    const id = setInterval(load, 30000); // раз в 30 сек
-    return () => { cancelled = true; clearInterval(id); };
+    // Авто-подхват изменений файла — только если включён shouldPoll
+    if (shouldPoll) {
+      timerId = setInterval(load, intervalMs);
+    }
+
+    return () => {
+      cancelled = true;
+      if (timerId) clearInterval(timerId);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // грузим и «наблюдаем», но не меняем ссылку без изменения контента
+  }, [shouldPoll, intervalMs]); // пересоздаём наблюдение при смене режима
 
   return {
     pairs: state.pairs,           // стабильная ссылка между "тиканием" времени
