@@ -1,10 +1,10 @@
+// src/App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import "./styles/index.css";
 import { usePairsData } from "./dataHook";
-import GameScreen from "./ui/GameScreen.jsx";
 
-// Игры
+// Экраны/игры
 import Matching from "./games/Matching.jsx";
 import Flashcards from "./games/Flashcards.jsx";
 import Quiz from "./games/Quiz.jsx";
@@ -12,10 +12,13 @@ import TypeTheWord from "./games/TypeTheWord.jsx";
 import SentenceBuilder from "./games/SentenceBuilder.jsx";
 import FillTheGap from "./games/FillTheGap.jsx";
 
-// Страница обучения слов
+// Отдельная страница обучения слов
 import LearnWords from "./pages/LearnWords.jsx";
 
-/* ---------- Внутренний компонент: главное меню ---------- */
+// ВНЕШНИЙ контейнер для игр (обязателен, чтобы не было перемонтажа)
+import GameScreen from "./ui/GameScreen.jsx";
+
+/* ---------- Главное меню ---------- */
 function Menu() {
   const VOCAB = [
     { to: "/matching",   icon: "🧩", title: "Matching",       desc: "Match words to definitions" },
@@ -30,7 +33,7 @@ function Menu() {
 
   return (
     <div className="container max-w-5xl py-6">
-      {/* Верхняя панель с кнопкой Learn */}
+      {/* Кнопка Learn words справа сверху */}
       <div className="flex justify-end mb-6">
         <Link to="/learn" className="btn">📚 Learn words</Link>
       </div>
@@ -62,7 +65,7 @@ function Menu() {
   );
 }
 
-/* ---------- Основное приложение с роутами ---------- */
+/* ---------- Приложение с полными маршрутами ---------- */
 export default function App() {
   const { pairs, source, error, updatedAt } = usePairsData();
 
@@ -74,29 +77,13 @@ export default function App() {
     </div>
   );
 
-  // Обёртка для экранов игр: Back + Learn сверху, meta снизу
-  const GameScreen = ({ children }) => (
-    <div className="min-h-screen py-6">
-      <div className="container mb-4 flex items-center justify-between gap-2">
-        <Link to="/" className="btn">← Back to menu</Link>
-        <Link to="/learn" className="btn">📚 Learn words</Link>
-      </div>
-
-      {children}
-
-      <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
-        {meta}
-      </div>
-    </div>
-  );
-
   return (
     <Router>
       <Routes>
-        {/* Главная (меню) */}
+        {/* Главная: меню */}
         <Route path="/" element={<Menu />} />
 
-        {/* Страница Learn words (отдельный URL) */}
+        {/* Отдельная страница обучения слов */}
         <Route
           path="/learn"
           element={
@@ -104,7 +91,7 @@ export default function App() {
               <div className="container mb-4">
                 <Link to="/" className="btn">← Back to menu</Link>
               </div>
-              <LearnWords pairs={pairs} onStart={(path)=>{ /* пример: стартовать флешкарты */ }} />
+              <LearnWords pairs={pairs} onStart={(gameId) => { /* можно сделать переход */ }} />
               <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
                 {meta}
               </div>
@@ -112,56 +99,67 @@ export default function App() {
           }
         />
 
-        {/* Игры — каждая со своей ссылкой */}
+        {/* ===== Полные маршруты игр (каждая игра обёрнута во внешний GameScreen) ===== */}
+
         <Route
           path="/matching"
           element={
-            <GameScreen>
+            <GameScreen meta={meta}>
               <Matching pairs={pairs} meta={meta} />
             </GameScreen>
           }
         />
+
         <Route
           path="/flashcards"
           element={
-            <GameScreen>
+            <GameScreen meta={meta}>
               <Flashcards pairs={pairs} meta={meta} />
             </GameScreen>
           }
         />
+
         <Route
           path="/quiz"
           element={
-            <GameScreen>
+            <GameScreen meta={meta}>
               <Quiz pairs={pairs} meta={meta} />
             </GameScreen>
           }
         />
+
         <Route
           path="/type"
           element={
-            <GameScreen>
+            <GameScreen meta={meta}>
               <TypeTheWord pairs={pairs} meta={meta} />
             </GameScreen>
           }
         />
+
         <Route
           path="/builder"
           element={
-            <GameScreen>
+            <GameScreen meta={meta}>
               <SentenceBuilder meta={meta} />
             </GameScreen>
           }
         />
+
         <Route
           path="/fill"
           element={
-            <GameScreen>
+            <GameScreen meta={meta}>
               <FillTheGap meta={meta} />
             </GameScreen>
           }
         />
       </Routes>
+
+      {/* Глобальный фиксированный футер (на главной уже нужен) */}
+      <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
+        {meta}
+      </div>
     </Router>
   );
 }
