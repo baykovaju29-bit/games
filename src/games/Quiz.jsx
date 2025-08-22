@@ -52,13 +52,11 @@ export default function Quiz({ pairs = [], meta }) {
         <Stat label="Accuracy" value={accuracy} />
       </div>
 
-      <div className="card card-pad mb-4 text-lg">
-        {curr.prompt}
-      </div>
+      <div className="card card-pad mb-4 text-lg">{curr.prompt}</div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {curr.options.map(opt => (
-          <button key={opt} className="btn" onClick={() => choose(opt)}>
+          <button type="button" key={opt} className="btn" onClick={() => choose(opt)}>
             {opt}
           </button>
         ))}
