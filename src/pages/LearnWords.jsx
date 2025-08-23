@@ -1,183 +1,159 @@
 // src/pages/LearnWords.jsx
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Page from "../ui/Page.jsx";
-import {
-  getProgress,
-  getAllProgress,
-  markLearned,
-  resetProgress,
-} from "../lib/progress";
-
-const FILTERS = ["All", "Due", "Not learned", "Learned"];
-
-// маленький визуальный прогресс (как в Reword): ★☆☆☆☆
-function Stars({ value = 0, max = 5 }) {
-  const v = Math.max(0, Math.min(value, max));
-  return (
-    <span className="font-mono text-sm">
-      {"★".repeat(v)}
-      <span className="text-slate-300">{"★".repeat(max - v)}</span>
-    </span>
-  );
-}
+import { getProgress, getAllProgress, markLearned, resetProgress, syncFromCloud } from "../lib/progress";
+import { useNavigate } from "react-router-dom";
 
 export default function LearnWords({ pairs = [], onStart }) {
-  const [q, setQ] = useState("");
-  const [filter, setFilter] = useState("All");
-  const now = Date.now();
+  const navigate = useNavigate();
 
-  // карта прогресса всех слов
-  const progressMap = getAllProgress();
+  // Подтянем облачный прогресс (необязательно — можно убрать, если не используешь Supabase)
+  useEffect(() => {
+    syncFromCloud().catch(() => {});
+  }, []);
 
-  // базовый список с присоединённым прогрессом
-  const enriched = useMemo(() => {
-    return (pairs || []).filter(Boolean).map((p) => {
-      const pr = getProgress(p.term);
-      const pct =
-        pr.attempts ? Math.round((pr.correct / pr.attempts) * 100) : 0;
-      return { ...p, _pr: pr, _pct: pct };
+  // Соединяем пары с прогрессом
+  const rows = useMemo(() => {
+    return (pairs || []).filter(p => p?.term).map(p => {
+      const prog = getProgress(p.term);
+      return {
+        term: p.term,
+        def: p.def || "",
+        ...prog,
+      };
     });
-  }, [pairs]);
+  }, [pairs, getAllProgress()]); // принудительно пересчитать при изменении локального кеша
 
-  // поиск + фильтры сверху
+  // Простая фильтрация списка
+  const [filter, setFilter] = useState("all"); // all | learned | unlearned
   const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    let list = enriched;
+    if (filter === "learned") return rows.filter(r => r.learned);
+    if (filter === "unlearned") return rows.filter(r => !r.learned);
+    return rows;
+  }, [rows, filter]);
 
-    if (s) {
-      list = list.filter(
-        (x) =>
-          x.term.toLowerCase().includes(s) ||
-          x.def.toLowerCase().includes(s)
-      );
-    }
-
-    if (filter === "Due") {
-      list = list.filter((x) => (x._pr.dueAt || 0) <= now);
-    } else if (filter === "Learned") {
-      list = list.filter((x) => !!x._pr.learned);
-    } else if (filter === "Not learned") {
-      list = list.filter((x) => !x._pr.learned);
-    }
-
-    return list;
-  }, [enriched, q, filter]);
-
-  // разбиение на секции «Learning» / «Learned»
-  const learning = filtered.filter((x) => !x._pr.learned);
-  const learned = filtered.filter((x) => x._pr.learned);
+  // Навигация в игры
+  const startFlashcards = () => {
+    // если надо — можно передать режим в query: navigate("/flashcards?scope=unlearned");
+    navigate("/flashcards");
+    onStart && onStart("flashcards");
+  };
+  const startQuiz = () => {
+    navigate("/quiz");
+    onStart && onStart("quiz");
+  };
 
   return (
     <Page
-      title="📚 Learn Words"
-      subtitle="Build mastery with spaced repetition. Filter, review and manage your list."
+      title="Learn Words"
+      subtitle="Review your list, mark learned, and jump into practice."
       right={
         <div className="flex gap-2">
-          <button className="btn" onClick={() => onStart?.("flashcards")}>
-            Start Flashcards
-          </button>
-          <button className="btn" onClick={() => onStart?.("quiz")}>
-            Start Quiz
-          </button>
+          <button type="button" className="btn" onClick={startFlashcards}>▶️ Start Flashcards</button>
+          <button type="button" className="btn btn-primary" onClick={startQuiz}>▶️ Start Quiz</button>
         </div>
       }
     >
-      {/* Поиск + фильтры */}
-      <div className="card card-pad mb-4 flex flex-col md:flex-row gap-2 md:items-center">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search words / definitions…"
-          className="flex-1 card px-3 py-2 outline-none"
-        />
-        <div className="flex gap-2">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              className={"btn " + (filter === f ? "btn-primary" : "")}
-              onClick={() => setFilter(f)}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Секция Learning */}
-      <h2 className="h2 mb-2">Learning</h2>
-      <WordGrid items={learning} />
-
-      {/* Секция Learned */}
-      <h2 className="h2 mt-8 mb-2">Learned</h2>
-      <WordGrid items={learned} emptyNote="No learned words yet — keep practicing!" />
-    </Page>
-  );
-}
-
-function WordGrid({ items, emptyNote = "No words match your filters." }) {
-  if (!items.length) {
-    return <div className="text-sm text-slate-500">{emptyNote}</div>;
-  }
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-      {items.map((x, i) => (
-        <WordCard key={x.key ?? x.term ?? i} p={x} />
-      ))}
-    </div>
-  );
-}
-
-function WordCard({ p }) {
-  const pr = p._pr;
-  const pct = p._pct;
-  const due =
-    pr.dueAt && pr.dueAt > 0
-      ? new Date(pr.dueAt).toLocaleDateString()
-      : "—";
-
-  return (
-    <div className="p-3 rounded-xl border bg-white">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <div className="font-semibold">{p.term}</div>
-          <div className="text-sm text-slate-500">{p.def}</div>
-        </div>
-        <span
-          className={
-            "px-2 py-1 rounded text-xs " +
-            (pr.learned
-              ? "bg-emerald-100 border border-emerald-200"
-              : "bg-slate-100 border border-slate-200")
-          }
-        >
-          {pr.learned ? "Learned" : "Learning"}
-        </span>
-      </div>
-
-      {/* Прогресс: звёзды + мини-метрики */}
-      <div className="mt-2 flex items-center justify-between">
-        <Stars value={pr.box || 0} max={5} />
-        <div className="text-xs text-slate-600 flex gap-3">
-          <span>Box: <b>{pr.box || 0}</b></span>
-          <span>Acc: <b>{pct}%</b></span>
-          <span>Attempts: <b>{pr.attempts || 0}</b></span>
-          <span>Due: <b>{due}</b></span>
-        </div>
-      </div>
-
-      {/* Действия */}
-      <div className="mt-2 flex gap-2">
+      {/* Фильтры */}
+      <div className="mb-3 flex items-center gap-2">
+        <span className="sub">Filter:</span>
         <button
-          className="btn"
-          onClick={() => markLearned(p.term, !pr.learned)}
+          type="button"
+          className={"btn " + (filter === "all" ? "btn-primary" : "")}
+          onClick={() => setFilter("all")}
         >
-          {pr.learned ? "Unlearn" : "Mark learned"}
+          All
         </button>
-        <button className="btn" onClick={() => resetProgress(p.term)}>
-          Reset
+        <button
+          type="button"
+          className={"btn " + (filter === "unlearned" ? "btn-primary" : "")}
+          onClick={() => setFilter("unlearned")}
+        >
+          Need practice
+        </button>
+        <button
+          type="button"
+          className={"btn " + (filter === "learned" ? "btn-primary" : "")}
+          onClick={() => setFilter("learned")}
+        >
+          Learned
         </button>
       </div>
-    </div>
+
+      {/* Таблица слов */}
+      <div className="card overflow-x-auto">
+        <table className="min-w-full text-sm">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="text-left px-3 py-2">Term</th>
+              <th className="text-left px-3 py-2">Definition</th>
+              <th className="text-left px-3 py-2">Box</th>
+              <th className="text-left px-3 py-2">Attempts</th>
+              <th className="text-left px-3 py-2">Correct</th>
+              <th className="text-left px-3 py-2">First‑try</th>
+              <th className="text-left px-3 py-2">Learned</th>
+              <th className="text-left px-3 py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((r) => (
+              <tr key={r.term} className="border-t">
+                <td className="px-3 py-2 font-medium">{r.term}</td>
+                <td className="px-3 py-2 text-slate-600">{r.def}</td>
+                <td className="px-3 py-2">{r.box ?? 0}</td>
+                <td className="px-3 py-2">{r.attempts ?? 0}</td>
+                <td className="px-3 py-2">{r.correct ?? 0}</td>
+                <td className="px-3 py-2">{r.firstTry ?? 0}</td>
+                <td className="px-3 py-2">
+                  {r.learned ? (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Yes</span>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">No</span>
+                  )}
+                </td>
+                <td className="px-3 py-2">
+                  <div className="flex gap-2">
+                    {r.learned ? (
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() => markLearned(r.term, false)}
+                        title="Mark as not learned"
+                      >
+                        Unlearn
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() => markLearned(r.term, true)}
+                        title="Mark as learned"
+                      >
+                        Mark learned
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => resetProgress(r.term)}
+                      title="Reset stats for this term"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {filtered.length === 0 && (
+              <tr>
+                <td className="px-3 py-6 text-center text-slate-500" colSpan={8}>
+                  Nothing to show.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </Page>
   );
 }
