@@ -45,12 +45,15 @@ html, body, #root { height: 100%; }
 
   /* Лёгкая тряска (ошибка) */
   .animate-shake { animation: shake 300ms ease-in-out; }
-  @keyframes shake {
-    0%,100% { transform: translateX(0); }
-    25%     { transform: translateX(-4px); }
-    50%     { transform: translateX(4px); }
-    75%     { transform: translateX(-2px); }
-  }
+  @keyframes vgs-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+.animate-shake {
+  animation: vgs-shake 0.35s ease both;
+}
 }
 /* 3D flip card */
 .flip-outer {
