@@ -136,19 +136,19 @@ export default function LearnWords({ pairs = [], onStart }) {
       </div>
 
       {/* Таблица */}
-<div className="card overflow-x-auto">
-  <table className="min-w-full text-sm table-fixed">
+<div className="card max-w-6xl mx-auto px-4">
+  <table className="w-full text-sm border-collapse">
     <thead className="bg-slate-50">
       <tr>
-        <th className="text-left px-4 py-3 w-32">Term</th>
-        <th className="text-left px-4 py-3 w-64">Definition</th>
-        <th className="text-left px-4 py-3 w-40">Progress</th>
-        <th className="text-left px-4 py-3 w-20">Box</th>
-        <th className="text-left px-4 py-3 w-24">Attempts</th>
-        <th className="text-left px-4 py-3 w-24">Correct</th>
-        <th className="text-left px-4 py-3 w-24">First-try</th>
-        <th className="text-left px-4 py-3 w-24">Learned</th>
-        <th className="text-left px-4 py-3 w-56">Actions</th>
+        <th className="text-left px-4 py-3">Term</th>
+        <th className="text-left px-4 py-3 w-2/5">Definition</th>
+        <th className="text-left px-4 py-3">Progress</th>
+        <th className="text-left px-4 py-3">Box</th>
+        <th className="text-left px-4 py-3">Attempts</th>
+        <th className="text-left px-4 py-3">Correct</th>
+        <th className="text-left px-4 py-3">First-try</th>
+        <th className="text-left px-4 py-3">Learned</th>
+        <th className="text-left px-4 py-3">Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -195,7 +195,7 @@ export default function LearnWords({ pairs = [], onStart }) {
               )}
               <button
                 type="button"
-                className="btn w-20"
+                className="btn w-24"
                 onClick={() => resetProgress(r.term)}
               >
                 Reset
