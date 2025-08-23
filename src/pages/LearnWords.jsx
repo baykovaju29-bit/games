@@ -136,7 +136,7 @@ export default function LearnWords({ pairs = [], onStart }) {
       </div>
 
       {/* Таблица */}
-<div className="card max-w-7xl ml-12 mr-4 px-2">
+<div className="card max-w-7xl -ml-8 md:-ml-12 mr-4 px-2">
   <table className="w-full text-sm border-collapse">
     <thead className="bg-slate-50">
       <tr>
