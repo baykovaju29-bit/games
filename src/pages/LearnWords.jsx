@@ -92,7 +92,7 @@ export default function LearnWords({ pairs = [], onStart }) {
       title="Learn Words"
       subtitle="Review your list, track progress, and jump into practice."
       right={
-        <div className="max-w-7xl ml-12 mr-auto">
+        <div className="max-w-7xl -ml-12 mr-auto">
           <button type="button" className="btn" onClick={startFlashcards}>
             ▶️ Start Flashcards
           </button>
