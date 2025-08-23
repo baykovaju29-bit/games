@@ -136,12 +136,12 @@ export default function LearnWords({ pairs = [], onStart }) {
       </div>
 
       {/* Таблица */}
-<div className="card max-w-7xl mx-auto px-2">
+<div className="card max-w-7xl mx-12 px-2">
   <table className="w-full text-sm border-collapse">
     <thead className="bg-slate-50">
       <tr>
         <th className="text-left px-4 py-3">Term</th>
-        <th className="text-left px-4 py-3 w-2/5">Definition</th>
+        <th className="text-left px-4 py-3 w-3/5">Definition</th>
         <th className="text-left px-4 py-3">Progress</th>
         <th className="text-left px-4 py-3">Box</th>
         <th className="text-left px-4 py-3">Attempts</th>
