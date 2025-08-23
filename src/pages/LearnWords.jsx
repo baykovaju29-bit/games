@@ -136,87 +136,84 @@ export default function LearnWords({ pairs = [], onStart }) {
       </div>
 
       {/* Таблица */}
-      <div className="card overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="text-left px-3 py-2">Term</th>
-              <th className="text-left px-3 py-2">Definition</th>
-              <th className="text-left px-3 py-2">Progress</th>
-              <th className="text-left px-3 py-2">Box</th>
-              <th className="text-left px-3 py-2">Attempts</th>
-              <th className="text-left px-3 py-2">Correct</th>
-              <th className="text-left px-3 py-2">First‑try</th>
-              <th className="text-left px-3 py-2">Learned</th>
-              <th className="text-left px-3 py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((r) => (
-              <tr key={r.term} className="border-t">
-                <td className="px-3 py-2 font-medium">{r.term}</td>
-                <td className="px-3 py-2 text-slate-600">{r.def}</td>
-                <td className="px-3 py-2">
-                  <ProgressBar pct={r.progressPct} />
-                </td>
-                <td className="px-3 py-2 tabular-nums">{r.box ?? 0}</td>
-                <td className="px-3 py-2 tabular-nums">{r.attempts ?? 0}</td>
-                <td className="px-3 py-2 tabular-nums">{r.correct ?? 0}</td>
-                <td className="px-3 py-2 tabular-nums">{r.firstTry ?? 0}</td>
-                <td className="px-3 py-2">
-                  {r.learned ? (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      Yes
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
-                      No
-                    </span>
-                  )}
-                </td>
-                <td className="px-3 py-2">
-                  <div className="flex gap-2">
-                    {r.learned ? (
-                      <button
-                        type="button"
-                        className="btn"
-                        onClick={() => markLearned(r.term, false)}
-                        title="Mark as not learned"
-                      >
-                        Unlearn
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="btn"
-                        onClick={() => markLearned(r.term, true)}
-                        title="Mark as learned"
-                      >
-                        Mark learned
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="btn"
-                      onClick={() => resetProgress(r.term)}
-                      title="Reset stats for this term"
-                    >
-                      Reset
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr>
-                <td className="px-3 py-6 text-center text-slate-500" colSpan={9}>
-                  Nothing to show.
-                </td>
-              </tr>
+<div className="card overflow-x-auto">
+  <table className="min-w-full text-sm table-fixed">
+    <thead className="bg-slate-50">
+      <tr>
+        <th className="text-left px-4 py-3 w-32">Term</th>
+        <th className="text-left px-4 py-3 w-64">Definition</th>
+        <th className="text-left px-4 py-3 w-40">Progress</th>
+        <th className="text-left px-4 py-3 w-20">Box</th>
+        <th className="text-left px-4 py-3 w-24">Attempts</th>
+        <th className="text-left px-4 py-3 w-24">Correct</th>
+        <th className="text-left px-4 py-3 w-24">First-try</th>
+        <th className="text-left px-4 py-3 w-24">Learned</th>
+        <th className="text-left px-4 py-3 w-56">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {filtered.map((r) => (
+        <tr key={r.term} className="border-t">
+          <td className="px-4 py-3 font-medium">{r.term}</td>
+          <td className="px-4 py-3 text-slate-600">{r.def}</td>
+          <td className="px-4 py-3">
+            <ProgressBar pct={r.progressPct} />
+          </td>
+          <td className="px-4 py-3 tabular-nums">{r.box ?? 0}</td>
+          <td className="px-4 py-3 tabular-nums">{r.attempts ?? 0}</td>
+          <td className="px-4 py-3 tabular-nums">{r.correct ?? 0}</td>
+          <td className="px-4 py-3 tabular-nums">{r.firstTry ?? 0}</td>
+          <td className="px-4 py-3">
+            {r.learned ? (
+              <span className="inline-flex items-center px-3 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Yes
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-3 py-1 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                No
+              </span>
             )}
-          </tbody>
-        </table>
-      </div>
+          </td>
+          <td className="px-4 py-3">
+            <div className="flex gap-3">
+              {r.learned ? (
+                <button
+                  type="button"
+                  className="btn w-28"
+                  onClick={() => markLearned(r.term, false)}
+                >
+                  Unlearn
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn w-28"
+                  onClick={() => markLearned(r.term, true)}
+                >
+                  Mark learned
+                </button>
+              )}
+              <button
+                type="button"
+                className="btn w-20"
+                onClick={() => resetProgress(r.term)}
+              >
+                Reset
+              </button>
+            </div>
+          </td>
+        </tr>
+      ))}
+      {filtered.length === 0 && (
+        <tr>
+          <td className="px-4 py-6 text-center text-slate-500" colSpan={9}>
+            Nothing to show.
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
     </Page>
   );
 }
