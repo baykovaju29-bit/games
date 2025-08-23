@@ -12,8 +12,7 @@ export default function Matching({ pairs = [], meta }) {
     [pairs]
   );
 
-  // Левая/правая колонка (перемешанные). В каждом элементе держим term,
-  // чтобы легко сопоставлять при проверке.
+  // Левая/правая колонка (перемешанные)
   const left = useMemo(
     () => shuffle(deck.map((p, idx) => ({ id: "L" + idx, term: p.term }))),
     [deck]
@@ -24,20 +23,20 @@ export default function Matching({ pairs = [], meta }) {
         deck.map((p, idx) => ({
           id: "R" + idx,
           def: p.def,
-          term: p.term,
+          term: p.term, // храним term, чтобы проверять совпадение
         }))
       ),
     [deck]
   );
 
   // --- Состояние игры ---
-  const [selected, setSelected] = useState(null); // { side: 'L'|'R', item:{id,term/def,term}}
-  const [solvedTerms, setSolvedTerms] = useState(new Set()); // какие terms уже решены (зелёные)
-  const [wasMistake, setWasMistake] = useState(new Set()); // на каких терминах уже была ошибка (для firstTry=false)
-  const [wrongTerm, setWrongTerm] = useState(null); // какой term подсветить красным при ошибке
-  const [shake, setShake] = useState(false); // встряска контейнера
+  const [selected, setSelected] = useState(null); // { side:'L'|'R', item }
+  const [solvedTerms, setSolvedTerms] = useState(new Set()); // какие term уже решены (зелёные)
+  const [wasMistakeTerms, setWasMistakeTerms] = useState(new Set()); // на каких term уже была ошибка (для firstTry=false)
+  const [wrongIds, setWrongIds] = useState(new Set()); // именно эти 2 id подсветить красным
+  const [shake, setShake] = useState(false);
 
-  // Статистика
+  // Статы
   const [score, setScore] = useState(0);
   const [answered, setAnswered] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -45,86 +44,73 @@ export default function Matching({ pairs = [], meta }) {
   const solvedCount = solvedTerms.size;
 
   function clearWrongFX() {
-    setWrongTerm(null);
+    setWrongIds(new Set());
     setShake(false);
   }
 
   function handlePick(side, item) {
-    // Нажатия по уже решённому — игнор
+    // Нажатия по уже решённому термину игнорируем
     if (solvedTerms.has(item.term)) return;
 
-    // Если ничего не выбрано — просто сохранить выбор
     if (!selected) {
       setSelected({ side, item });
       return;
     }
 
-    // Если клик по той же стороне — заменить выбор
+    // Если кликнули по той же стороне — просто заменим выбор
     if (selected.side === side) {
       setSelected({ side, item });
       return;
     }
 
-    // Есть выбранное с другой стороны — проверяем пару
-    const termA = selected.side === "L" ? selected.item.term : item.term;
-    const termB = selected.side === "L" ? item.term : selected.item.term;
-    const isCorrect = termA === termB;
+    // Проверяем пару
+    const leftItem  = selected.side === "L" ? selected.item : item;
+    const rightItem = selected.side === "L" ? item : selected.item;
+    const isCorrect = leftItem.term === rightItem.term;
+
     setAnswered((n) => n + 1);
 
     if (isCorrect) {
-      // Правильно
+      // верный ответ
       setScore((s) => s + 1);
       setStreak((st) => st + 1);
 
-      const firstTry = !wasMistake.has(termA);
-      recordResult({
-        term: termA,
-        correct: true,
-        firstTry,
-        game: "matching",
-      });
+      const thisTerm = leftItem.term;
+      const firstTry = !wasMistakeTerms.has(thisTerm);
+      recordResult({ term: thisTerm, correct: true, firstTry, game: "matching" });
 
       setSolvedTerms((prev) => {
         const next = new Set(prev);
-        next.add(termA);
+        next.add(thisTerm);
         return next;
       });
 
-      // Сбросить отметку "была ошибка", если она была
-      setWasMistake((prev) => {
+      // убираем метку «была ошибка» для этого термина
+      setWasMistakeTerms((prev) => {
         const next = new Set(prev);
-        next.delete(termA);
+        next.delete(thisTerm);
         return next;
       });
 
-      // Очистить активный выбор
       setSelected(null);
       clearWrongFX();
     } else {
-      // Ошибка: красная подсветка и встряска
+      // ошибка: подсветим ИМЕННО выбранные кнопки и встряхнём
       setStreak(0);
-      recordResult({
-        term: selected.side === "L" ? selected.item.term : item.term,
-        correct: false,
-        firstTry: false,
-        game: "matching",
-      });
 
-      // помечаем, что на этом term уже была ошибка
-      const mistakeTerm =
-        selected.side === "L" ? selected.item.term : item.term;
-      setWasMistake((prev) => {
+      const mistakeTerm = leftItem.term; // ошибку вешаем на терм пары, от которого отталкивались
+      recordResult({ term: mistakeTerm, correct: false, firstTry: false, game: "matching" });
+
+      setWasMistakeTerms((prev) => {
         const next = new Set(prev);
         next.add(mistakeTerm);
         return next;
       });
 
-      // визуальные эффекты
-      const wrongFor = selected.side === "L" ? selected.item.term : item.term;
-      setWrongTerm(wrongFor);
+      setWrongIds(new Set([leftItem.id, rightItem.id]));
       setShake(true);
 
-      // через небольшую паузу убираем эффекты и сбрасываем выбор
+      // быстро убираем эффекты и сбрасываем выбор
       setTimeout(() => {
         setSelected(null);
         clearWrongFX();
@@ -133,19 +119,14 @@ export default function Matching({ pairs = [], meta }) {
   }
 
   // Классы для кнопок
-  function btnClass(side, item) {
+  function btnClass(item) {
     const base = "btn justify-start transition";
     const isSolved = solvedTerms.has(item.term);
-    const isSelected =
-      selected && selected.side === side && selected.item.id === item.id;
-    const isWrong =
-      wrongTerm && (item.term === wrongTerm); // подсветим обе кнопки пары
+    const isSelected = selected && selected.item.id === item.id;
+    const isWrong = wrongIds.has(item.id);
 
     if (isSolved) {
-      return (
-        base +
-        " bg-emerald-50 border-emerald-200 text-emerald-900 opacity-80 pointer-events-none"
-      );
+      return base + " bg-emerald-50 border-emerald-200 text-emerald-900 opacity-80 pointer-events-none";
     }
     if (isWrong) {
       return base + " bg-rose-50 border-rose-200";
@@ -160,7 +141,7 @@ export default function Matching({ pairs = [], meta }) {
 
   return (
     <Page title="Matching" subtitle="Match terms to their definitions." right={null}>
-      {/* Статы */}
+      {/* Статистика */}
       <div className="grid grid-cols-4 gap-2 md:gap-3 mb-6">
         <Stat label="Solved" value={`${solvedCount}/${deck.length}`} />
         <Stat label="Score" value={score} />
@@ -168,9 +149,9 @@ export default function Matching({ pairs = [], meta }) {
         <Stat label="Accuracy" value={accuracy} />
       </div>
 
-      {/* Две колонки */}
+      {/* Игровое поле */}
       <div className={"grid grid-cols-1 sm:grid-cols-2 gap-3 " + (shake ? "animate-shake" : "")}>
-        {/* Левая: термины */}
+        {/* Термины */}
         <div className="card card-pad">
           <div className="sub mb-2">Terms</div>
           <div className="flex flex-col gap-2">
@@ -178,7 +159,7 @@ export default function Matching({ pairs = [], meta }) {
               <button
                 type="button"
                 key={item.id}
-                className={btnClass("L", item)}
+                className={btnClass(item)}
                 onClick={() => handlePick("L", item)}
               >
                 {item.term}
@@ -187,7 +168,7 @@ export default function Matching({ pairs = [], meta }) {
           </div>
         </div>
 
-        {/* Правая: определения */}
+        {/* Определения */}
         <div className="card card-pad">
           <div className="sub mb-2">Definitions</div>
           <div className="flex flex-col gap-2">
@@ -195,7 +176,7 @@ export default function Matching({ pairs = [], meta }) {
               <button
                 type="button"
                 key={item.id}
-                className={btnClass("R", item)}
+                className={btnClass(item)}
                 onClick={() => handlePick("R", item)}
               >
                 {item.def}
