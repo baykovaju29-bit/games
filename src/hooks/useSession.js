@@ -3,26 +3,34 @@ import { supabase } from "../lib/supabaseClient";
 
 export function useSession() {
   const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
     (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (mounted) setSession(data?.session ?? null);
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (mounted) setSession(data?.session ?? null);
+      } catch (_e) {
+        if (mounted) setSession(null);
+      } finally {
+        if (mounted) setLoading(false);
+      }
     })();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, sess) => {
-      if (mounted) setSession(sess);
+    const { data } = supabase.auth.onAuthStateChange((_event, sess) => {
+      if (mounted) {
+        setSession(sess);
+        setLoading(false);
+      }
     });
 
     return () => {
       mounted = false;
-      subscription?.unsubscribe?.();
+      data?.subscription?.unsubscribe?.();
     };
   }, []);
 
-  return { session };
+  return { session, loading };
 }

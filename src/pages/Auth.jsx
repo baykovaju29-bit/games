@@ -1,5 +1,6 @@
 // src/pages/Auth.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 
 export default function AuthPage() {
@@ -10,6 +11,13 @@ export default function AuthPage() {
   const [session, setSession] = useState(null);
   const [busy, setBusy] = useState(false);
   const [isSignUp, setIsSignUp] = useState(true); // Track if we're in sign-up or sign-in mode
+  const navigate = useNavigate();
+  const loc = useLocation();
+  const redirectPath = useMemo(() => {
+    const params = new URLSearchParams(loc.search || "");
+    const r = params.get("redirect");
+    return r && r.startsWith("/") ? r : "/";
+  }, [loc.search]);
 
   // Подписываемся на изменения сессии — сразу видно, вошли или нет
   useEffect(() => {
@@ -19,6 +27,13 @@ export default function AuthPage() {
     });
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  // After successful login, redirect to intended route (or home)
+  useEffect(() => {
+    if (session) {
+      navigate(redirectPath, { replace: true });
+    }
+  }, [session, navigate, redirectPath]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
