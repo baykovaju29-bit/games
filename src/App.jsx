@@ -1,6 +1,6 @@
 // src/App.jsx
 import React from "react";
-import { HashRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Link, useNavigate, Navigate } from "react-router-dom";
 import "./styles/index.css";
 import { usePairsData } from "./dataHook.jsx";
 
@@ -20,6 +20,7 @@ import EnvDebug from "./components/EnvDebug.jsx";
 
 import { useSession } from "./hooks/useSession";
 import { supabase } from "./lib/supabaseClient";
+import RequireAuth from "./components/RequireAuth.jsx";
 
 // ---------- Верхняя панель меню c кнопками Learn / Sign in/out ----------
 function TopRight() {
@@ -28,7 +29,7 @@ function TopRight() {
 
   async function signOut() {
     await supabase.auth.signOut();
-    navigate("/"); // домой
+    navigate("/auth", { replace: true });
   }
 
   return (
@@ -98,6 +99,12 @@ export default function App(){
     </div>
   );
 
+  function Landing(){
+    const { session, loading } = useSession();
+    if (loading) return <div className="p-6">Loading…</div>;
+    return <Navigate to={session ? "/home" : "/auth"} replace />;
+  }
+
   return (
     <ErrorBoundary>
       <Router>
@@ -105,22 +112,25 @@ export default function App(){
         <EnvDebug />
 
         <Routes>
-          <Route path="/" element={<Menu />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/home" element={<RequireAuth><Menu /></RequireAuth>} />
 
           {/* Learn words */}
           <Route
             path="/learn"
             element={
-              <div className="min-h-screen py-6">
-                <div className="container mb-4 flex items-center justify-between">
-                  <Link to="/" className="btn">← Back to menu</Link>
-                  <TopRight />
+              <RequireAuth>
+                <div className="min-h-screen py-6">
+                  <div className="container mb-4 flex items-center justify-between">
+                    <Link to="/home" className="btn">← Back to menu</Link>
+                    <TopRight />
+                  </div>
+                  <LearnWords pairs={pairs} onStart={()=>{}} />
+                  <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
+                    {meta}
+                  </div>
                 </div>
-                <LearnWords pairs={pairs} onStart={()=>{}} />
-                <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
-                  {meta}
-                </div>
-              </div>
+              </RequireAuth>
             }
           />
 
@@ -128,7 +138,7 @@ export default function App(){
           <Route path="/auth" element={
             <div className="min-h-screen py-6">
               <div className="container mb-4 flex items-center justify-between">
-                <Link to="/" className="btn">← Back to menu</Link>
+                <Link to="/home" className="btn">← Back to menu</Link>
                 <TopRight />
               </div>
               <Auth />
@@ -137,26 +147,38 @@ export default function App(){
 
           {/* Games */}
           <Route path="/matching" element={
-            <GameScreen meta={meta}><Matching pairs={pairs} meta={meta} /></GameScreen>
+            <RequireAuth>
+              <GameScreen meta={meta}><Matching pairs={pairs} meta={meta} /></GameScreen>
+            </RequireAuth>
           } />
           <Route path="/flashcards" element={
-            <GameScreen meta={meta}><Flashcards pairs={pairs} meta={meta} /></GameScreen>
+            <RequireAuth>
+              <GameScreen meta={meta}><Flashcards pairs={pairs} meta={meta} /></GameScreen>
+            </RequireAuth>
           } />
           <Route path="/quiz" element={
-            <GameScreen meta={meta}><Quiz pairs={pairs} meta={meta} /></GameScreen>
+            <RequireAuth>
+              <GameScreen meta={meta}><Quiz pairs={pairs} meta={meta} /></GameScreen>
+            </RequireAuth>
           } />
           <Route path="/type" element={
-            <GameScreen meta={meta}><TypeTheWord pairs={pairs} meta={meta} /></GameScreen>
+            <RequireAuth>
+              <GameScreen meta={meta}><TypeTheWord pairs={pairs} meta={meta} /></GameScreen>
+            </RequireAuth>
           } />
           <Route path="/builder" element={
-            <GameScreen meta={meta}><SentenceBuilder meta={meta} /></GameScreen>
+            <RequireAuth>
+              <GameScreen meta={meta}><SentenceBuilder meta={meta} /></GameScreen>
+            </RequireAuth>
           } />
           <Route path="/fill" element={
-            <GameScreen meta={meta}><FillTheGap meta={meta} /></GameScreen>
+            <RequireAuth>
+              <GameScreen meta={meta}><FillTheGap meta={meta} /></GameScreen>
+            </RequireAuth>
           } />
 
           {/* Fallback */}
-          <Route path="*" element={<Menu />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
         {/* Общий футер */}
