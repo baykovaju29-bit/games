@@ -79,7 +79,7 @@ export default function LearnWords({ pairs = [], onStart }) {
       }
     >
       {/* общий контейнер страницы: сдвиг влево и умеренные поля справа */}
-      <div className="max-w-7xl ml-8 mr-4">
+      <div className="max-w-7xl -ml-8 mr-4">
         {/* Фильтры */}
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <span className="sub">Filter:</span>
