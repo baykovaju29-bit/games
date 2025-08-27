@@ -5,7 +5,7 @@ export default function GameScreen({ children, meta }) {
   return (
     <div className="min-h-screen py-6">
       <div className="container mb-4 flex items-center justify-between gap-2">
-        <Link to="/" className="btn">← Back to menu</Link>
+        <Link to="/home" className="btn">← Back to menu</Link>
         <Link to="/learn" className="btn">📚 Learn words</Link>
       </div>
       {children}

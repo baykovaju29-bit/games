@@ -1,6 +1,6 @@
 // src/App.jsx
 import React from "react";
-import { HashRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Link, useNavigate, Navigate } from "react-router-dom";
 import "./styles/index.css";
 import { usePairsData } from "./dataHook.jsx";
 
@@ -29,7 +29,7 @@ function TopRight() {
 
   async function signOut() {
     await supabase.auth.signOut();
-    navigate("/"); // домой
+    navigate("/auth", { replace: true });
   }
 
   return (
@@ -99,6 +99,12 @@ export default function App(){
     </div>
   );
 
+  function Landing(){
+    const { session, loading } = useSession();
+    if (loading) return <div className="p-6">Loading…</div>;
+    return <Navigate to={session ? "/home" : "/auth"} replace />;
+  }
+
   return (
     <ErrorBoundary>
       <Router>
@@ -106,7 +112,8 @@ export default function App(){
         <EnvDebug />
 
         <Routes>
-          <Route path="/" element={<RequireAuth><Menu /></RequireAuth>} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/home" element={<RequireAuth><Menu /></RequireAuth>} />
 
           {/* Learn words */}
           <Route
@@ -115,7 +122,7 @@ export default function App(){
               <RequireAuth>
                 <div className="min-h-screen py-6">
                   <div className="container mb-4 flex items-center justify-between">
-                    <Link to="/" className="btn">← Back to menu</Link>
+                    <Link to="/home" className="btn">← Back to menu</Link>
                     <TopRight />
                   </div>
                   <LearnWords pairs={pairs} onStart={()=>{}} />
@@ -131,7 +138,7 @@ export default function App(){
           <Route path="/auth" element={
             <div className="min-h-screen py-6">
               <div className="container mb-4 flex items-center justify-between">
-                <Link to="/" className="btn">← Back to menu</Link>
+                <Link to="/home" className="btn">← Back to menu</Link>
                 <TopRight />
               </div>
               <Auth />
@@ -171,7 +178,7 @@ export default function App(){
           } />
 
           {/* Fallback */}
-          <Route path="*" element={<RequireAuth><Menu /></RequireAuth>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
         {/* Общий футер */}
