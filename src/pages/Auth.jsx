@@ -1,159 +1,107 @@
-import React, { useState } from "react";
+// src/pages/Auth.jsx
+import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { useSession } from "../hooks/useSession";
 
-export default function Auth() {
-  const { session, loading } = useSession();
-
-  const [mode, setMode] = useState("signin"); // "signin" | "signup"
+export default function AuthPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState("");
+  const [pass, setPass] = useState("");
+  const [name, setName] = useState("");
+  const [msg, setMsg]   = useState("");
+  const [session, setSession] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  async function onSignIn(e) {
-    e.preventDefault();
-    setBusy(true);
-    setMsg("");
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) {
-        setMsg(error.message);
-        console.error("signIn error:", error);
-      } else {
-        setMsg("Signed in.");
-      }
-    } catch (err) {
-      setMsg(String(err?.message || err));
-      console.error("signIn catch:", err);
-    } finally {
-      setBusy(false);
-    }
-  }
+  // Подписываемся на изменения сессии — сразу видно, вошли или нет
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session || null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
+      setSession(sess);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
-  async function onSignUp(e) {
+  async function signUp(e) {
     e.preventDefault();
-    setBusy(true);
-    setMsg("");
+    setMsg(""); setBusy(true);
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
-        password,
+        password: pass,
         options: {
-          // redirect обратно на страницу авторизации в твоём SPA (HashRouter)
           emailRedirectTo: `${location.origin}/#/auth`,
+          data: { name: name || undefined },
         },
       });
-
       if (error) {
-        setMsg(error.message);
-        console.error("signUp error:", error);
+        setMsg(`❌ ${error.message}`);
+      } else if (data?.user && !data?.session) {
+        // Подтверждение включено — письма без сессии
+        setMsg("📧 Check your email to confirm the address.");
+      } else if (data?.session) {
+        setMsg("✅ Signed up & logged in.");
       } else {
-        // Если в Supabase включено подтверждение почты, user сразу НЕ будет авторизован.
-        // В этом случае показываем понятное сообщение.
-        if (!data.user || data.user?.identities?.length === 0) {
-          setMsg(
-            "Check your email to confirm the address. After confirming you'll be redirected here."
-          );
-        } else {
-          setMsg("Account created. You can sign in now.");
-        }
+        setMsg("ℹ️ Sign-up request sent.");
       }
     } catch (err) {
-      setMsg(String(err?.message || err));
-      console.error("signUp catch:", err);
+      setMsg(`❌ ${err.message || String(err)}`);
     } finally {
       setBusy(false);
     }
   }
 
-  async function onSignOut() {
-    setBusy(true);
-    setMsg("");
+  async function signIn(e) {
+    e.preventDefault();
+    setMsg(""); setBusy(true);
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) setMsg(error.message);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email, password: pass,
+      });
+      if (error) setMsg(`❌ ${error.message}`);
+      else if (data?.session) setMsg("✅ Signed in.");
+      else setMsg("ℹ️ No session returned.");
+    } catch (err) {
+      setMsg(`❌ ${err.message || String(err)}`);
     } finally {
       setBusy(false);
     }
   }
 
-  if (loading) return <div className="p-6">Loading…</div>;
+  async function signOut() {
+    setBusy(true); setMsg("");
+    await supabase.auth.signOut();
+    setBusy(false);
+  }
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="mb-4 flex items-center gap-2">
-        <div className="text-sm text-slate-600">
-          Session:&nbsp;
-          {session?.user ? (
-            <span className="font-medium">{session.user.email}</span>
-          ) : (
-            "— not signed in —"
-          )}
+    <div className="container max-w-md py-8">
+      <h1 className="h1 mb-2">Account</h1>
+      <p className="sub mb-4">Create an account or sign in.</p>
+
+      <form className="card card-pad space-y-3" onSubmit={signUp}>
+        <div>
+          <label className="sub block">Name (optional)</label>
+          <input className="input" value={name} onChange={e=>setName(e.target.value)} />
         </div>
-        {session && (
-          <button className="btn" onClick={onSignOut} disabled={busy}>
-            🚪 Sign out
-          </button>
-        )}
-      </div>
+        <div>
+          <label className="sub block">Email</label>
+          <input className="input" type="email" required value={email} onChange={e=>setEmail(e.target.value)} />
+        </div>
+        <div>
+          <label className="sub block">Password (≥ 6 chars)</label>
+          <input className="input" type="password" required minLength={6} value={pass} onChange={e=>setPass(e.target.value)} />
+        </div>
 
-      {!session && (
-        <form
-          className="max-w-sm card card-pad space-y-3"
-          onSubmit={mode === "signin" ? onSignIn : onSignUp}
-        >
-          <div className="text-lg font-semibold">
-            {mode === "signin" ? "Sign in" : "Create account"}
-          </div>
+        <div className="flex gap-2">
+          <button className="btn btn-primary" onClick={signUp} disabled={busy}>Sign up</button>
+          <button className="btn" onClick={signIn} disabled={busy}>Sign in</button>
+          {session && <button className="btn" onClick={signOut} disabled={busy}>Sign out</button>}
+        </div>
 
-          <label className="block">
-            <div className="sub">Email</div>
-            <input
-              className="input w-full"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-            />
-          </label>
+        {msg && <div className="text-sm mt-2">{msg}</div>}
 
-          <label className="block">
-            <div className="sub">Password</div>
-            <input
-              className="input w-full"
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="at least 6 characters"
-            />
-          </label>
-
-          {msg && <div className="text-amber-700 text-sm">{msg}</div>}
-
-          <div className="flex gap-2">
-            <button className="btn btn-primary" disabled={busy} type="submit">
-              {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Sign up"}
-            </button>
-            <button
-              className="btn"
-              type="button"
-              onClick={() =>
-                setMode((m) => (m === "signin" ? "signup" : "signin"))
-              }
-              disabled={busy}
-            >
-              {mode === "signin" ? "Create account" : "Have account? Sign in"}
-            </button>
-          </div>
-        </form>
-      )}
+        <div className="mt-3 text-xs text-slate-500">
+          Session: {session ? "active" : "—"}{session && <> · {session.user?.email}</>}
+        </div>
+      </form>
     </div>
   );
 }
