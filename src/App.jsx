@@ -1,5 +1,6 @@
+// src/App.jsx
 import React from "react";
-import { HashRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 import "./styles/index.css";
 import { usePairsData } from "./dataHook.jsx";
 
@@ -10,10 +11,38 @@ import TypeTheWord from "./games/TypeTheWord.jsx";
 import SentenceBuilder from "./games/SentenceBuilder.jsx";
 import FillTheGap from "./games/FillTheGap.jsx";
 import LearnWords from "./pages/LearnWords.jsx";
+import Auth from "./pages/Auth.jsx";
 
 import GameScreen from "./ui/GameScreen.jsx";
 import FormGuard from "./ui/FormGuard.jsx";
 import ErrorBoundary from "./ui/ErrorBoundary.jsx";
+
+import { useSession } from "./hooks/useSession";
+import { supabase } from "./lib/supabaseClient";
+
+// ---------- Верхняя панель меню c кнопками Learn / Sign in/out ----------
+function TopRight() {
+  const { session } = useSession();
+  const navigate = useNavigate();
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    navigate("/"); // домой
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Link to="/learn" className="btn">📚 Learn words</Link>
+      {session?.user ? (
+        <button className="btn" onClick={signOut}>
+          🚪 Sign out ({session.user.email})
+        </button>
+      ) : (
+        <Link to="/auth" className="btn">🔑 Sign in</Link>
+      )}
+    </div>
+  );
+}
 
 function Menu(){
   const VOCAB = [
@@ -29,7 +58,7 @@ function Menu(){
   return (
     <div className="container max-w-5xl py-6">
       <div className="flex justify-end mb-6">
-        <Link to="/learn" className="btn">📚 Learn words</Link>
+        <TopRight />
       </div>
 
       <h1 className="h1">🎮 Vocabulary Games</h1>
@@ -75,12 +104,15 @@ export default function App(){
 
         <Routes>
           <Route path="/" element={<Menu />} />
+
+          {/* Learn words */}
           <Route
             path="/learn"
             element={
               <div className="min-h-screen py-6">
-                <div className="container mb-4">
+                <div className="container mb-4 flex items-center justify-between">
                   <Link to="/" className="btn">← Back to menu</Link>
+                  <TopRight />
                 </div>
                 <LearnWords pairs={pairs} onStart={()=>{}} />
                 <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
@@ -90,6 +122,17 @@ export default function App(){
             }
           />
 
+          {/* Auth page */}
+          <Route path="/auth" element={
+            <div className="min-h-screen py-6">
+              <div className="container mb-4">
+                <Link to="/" className="btn">← Back to menu</Link>
+              </div>
+              <Auth />
+            </div>
+          } />
+
+          {/* Games */}
           <Route path="/matching" element={
             <GameScreen meta={meta}><Matching pairs={pairs} meta={meta} /></GameScreen>
           } />
@@ -108,9 +151,12 @@ export default function App(){
           <Route path="/fill" element={
             <GameScreen meta={meta}><FillTheGap meta={meta} /></GameScreen>
           } />
+
+          {/* Fallback */}
+          <Route path="*" element={<Menu />} />
         </Routes>
 
-        {/* Футер на главной тоже виден */}
+        {/* Общий футер */}
         <div className="fixed bottom-3 right-3 bg-white/80 backdrop-blur border rounded-lg px-3 py-2 shadow-sm">
           {meta}
         </div>
