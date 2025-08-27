@@ -1,69 +1,159 @@
-import React, { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
-import { useNavigate, useLocation } from "react-router-dom";
-import Page from "../ui/Page.jsx";
+import React, { useState } from "react";
+import { supabase } from "../lib/supabaseClient";
+import { useSession } from "../hooks/useSession";
 
 export default function Auth() {
-  const [mode, setMode] = useState("signin"); // 'signin' | 'signup'
+  const { session, loading } = useSession();
+
+  const [mode, setMode] = useState("signin"); // "signin" | "signup"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        const redirect = new URLSearchParams(location.search).get("redirect") || "/";
-        navigate(redirect, { replace: true });
+  async function onSignIn(e) {
+    e.preventDefault();
+    setBusy(true);
+    setMsg("");
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        setMsg(error.message);
+        console.error("signIn error:", error);
+      } else {
+        setMsg("Signed in.");
       }
-    });
-    return () => sub.subscription.unsubscribe();
-  }, [navigate, location.search]);
-
-  async function signIn(e) {
-    e.preventDefault();
-    setBusy(true); setMsg("");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setMsg(error.message);
-    setBusy(false);
+    } catch (err) {
+      setMsg(String(err?.message || err));
+      console.error("signIn catch:", err);
+    } finally {
+      setBusy(false);
+    }
   }
 
-  async function signUp(e) {
+  async function onSignUp(e) {
     e.preventDefault();
-    setBusy(true); setMsg("");
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) setMsg(error.message);
-    else setMsg("Check your email to confirm (if confirmations enabled).");
-    setBusy(false);
+    setBusy(true);
+    setMsg("");
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          // redirect обратно на страницу авторизации в твоём SPA (HashRouter)
+          emailRedirectTo: `${location.origin}/#/auth`,
+        },
+      });
+
+      if (error) {
+        setMsg(error.message);
+        console.error("signUp error:", error);
+      } else {
+        // Если в Supabase включено подтверждение почты, user сразу НЕ будет авторизован.
+        // В этом случае показываем понятное сообщение.
+        if (!data.user || data.user?.identities?.length === 0) {
+          setMsg(
+            "Check your email to confirm the address. After confirming you'll be redirected here."
+          );
+        } else {
+          setMsg("Account created. You can sign in now.");
+        }
+      }
+    } catch (err) {
+      setMsg(String(err?.message || err));
+      console.error("signUp catch:", err);
+    } finally {
+      setBusy(false);
+    }
   }
+
+  async function onSignOut() {
+    setBusy(true);
+    setMsg("");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) setMsg(error.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (loading) return <div className="p-6">Loading…</div>;
 
   return (
-    <Page title={mode === "signin" ? "Sign in" : "Create account"} subtitle="">
-      <form className="max-w-md mx-auto card card-pad space-y-3" onSubmit={mode === "signin" ? signIn : signUp}>
-        <label className="block">
-          <div className="sub mb-1">Email</div>
-          <input className="input w-full" type="email" autoComplete="email"
-                 value={email} onChange={e => setEmail(e.target.value)} required />
-        </label>
-        <label className="block">
-          <div className="sub mb-1">Password</div>
-          <input className="input w-full" type="password" autoComplete={mode==="signin"?"current-password":"new-password"}
-                 value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
-        </label>
-
-        {msg && <div className="text-sm text-amber-700">{msg}</div>}
-
-        <div className="flex gap-2">
-          <button disabled={busy} className="btn btn-primary" type="submit">
-            {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Sign up"}
-          </button>
-          <button type="button" className="btn" onClick={() => setMode(m => m === "signin" ? "signup" : "signin")}>
-            {mode === "signin" ? "Create account" : "Have an account? Sign in"}
-          </button>
+    <div className="min-h-screen p-6">
+      <div className="mb-4 flex items-center gap-2">
+        <div className="text-sm text-slate-600">
+          Session:&nbsp;
+          {session?.user ? (
+            <span className="font-medium">{session.user.email}</span>
+          ) : (
+            "— not signed in —"
+          )}
         </div>
-      </form>
-    </Page>
+        {session && (
+          <button className="btn" onClick={onSignOut} disabled={busy}>
+            🚪 Sign out
+          </button>
+        )}
+      </div>
+
+      {!session && (
+        <form
+          className="max-w-sm card card-pad space-y-3"
+          onSubmit={mode === "signin" ? onSignIn : onSignUp}
+        >
+          <div className="text-lg font-semibold">
+            {mode === "signin" ? "Sign in" : "Create account"}
+          </div>
+
+          <label className="block">
+            <div className="sub">Email</div>
+            <input
+              className="input w-full"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+            />
+          </label>
+
+          <label className="block">
+            <div className="sub">Password</div>
+            <input
+              className="input w-full"
+              type="password"
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="at least 6 characters"
+            />
+          </label>
+
+          {msg && <div className="text-amber-700 text-sm">{msg}</div>}
+
+          <div className="flex gap-2">
+            <button className="btn btn-primary" disabled={busy} type="submit">
+              {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Sign up"}
+            </button>
+            <button
+              className="btn"
+              type="button"
+              onClick={() =>
+                setMode((m) => (m === "signin" ? "signup" : "signin"))
+              }
+              disabled={busy}
+            >
+              {mode === "signin" ? "Create account" : "Have account? Sign in"}
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
   );
 }
