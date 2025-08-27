@@ -125,8 +125,9 @@ export default function App(){
           {/* Auth page */}
           <Route path="/auth" element={
             <div className="min-h-screen py-6">
-              <div className="container mb-4">
+              <div className="container mb-4 flex items-center justify-between">
                 <Link to="/" className="btn">← Back to menu</Link>
+                <TopRight />
               </div>
               <Auth />
             </div>
@@ -145,7 +146,9 @@ export default function App(){
           <Route path="/type" element={
             <GameScreen meta={meta}><TypeTheWord pairs={pairs} meta={meta} /></GameScreen>
           } />
-          <Route path="/builder" element={
+          <Route path="/builder" element{
+            /* meta для SentenceBuilder не нужен, но пусть будет для единообразия */
+          }={
             <GameScreen meta={meta}><SentenceBuilder meta={meta} /></GameScreen>
           } />
           <Route path="/fill" element={
