@@ -15,8 +15,10 @@ export default function AuthPage() {
   const loc = useLocation();
   const redirectPath = useMemo(() => {
     const params = new URLSearchParams(loc.search || "");
-    const r = params.get("redirect");
-    return r && r.startsWith("/") ? r : "/";
+    const requested = params.get("redirect");
+    let r = requested && requested.startsWith("/") ? requested : "/home";
+    if (r === "/learn") r = "/home";
+    return r;
   }, [loc.search]);
 
   // Подписываемся на изменения сессии — сразу видно, вошли или нет
