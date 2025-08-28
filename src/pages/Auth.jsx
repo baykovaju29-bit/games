@@ -129,15 +129,16 @@ export default function AuthPage() {
       <p className="sub mb-4">Create an account or sign in.</p>
 
       <form className="card card-pad space-y-3" onSubmit={handleSubmit}>
-        <div>
-          <label className="sub block">Name (optional)</label>
-          <input 
-            className="input" 
-            value={name} 
-            onChange={e => setName(e.target.value)}
-            disabled={!isSignUp} // Only show name field for sign-up
-          />
-        </div>
+        {isSignUp && (
+          <div>
+            <label className="sub block">Name (optional)</label>
+            <input 
+              className="input" 
+              value={name} 
+              onChange={e => setName(e.target.value)}
+            />
+          </div>
+        )}
         <div>
           <label className="sub block">Email</label>
           <input 
