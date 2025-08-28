@@ -135,33 +135,43 @@ export default function AuthPage() {
       <form className="card card-pad space-y-3" onSubmit={handleSubmit}>
         {isSignUp && (
           <div>
-            <label className="sub block">Name (optional)</label>
+            <label className="sub block" htmlFor="auth_name">Name (optional)</label>
             <input 
+              id="auth_name"
+              name="name"
               className="input" 
               value={name} 
               onChange={e => setName(e.target.value)}
+              autoComplete="name"
             />
           </div>
         )}
         <div>
-          <label className="sub block">Email</label>
+          <label className="sub block" htmlFor="auth_email">Email</label>
           <input 
+            id="auth_email"
+            name="email"
             className="input" 
             type="email" 
             required 
             value={email} 
             onChange={e => setEmail(e.target.value)} 
+            autoComplete="email"
+            inputMode="email"
           />
         </div>
         <div>
-          <label className="sub block">Password (≥ 6 chars)</label>
+          <label className="sub block" htmlFor="auth_password">Password (≥ 6 chars)</label>
           <input 
+            id="auth_password"
+            name="password"
             className="input" 
             type="password" 
             required 
             minLength={6} 
             value={pass} 
             onChange={e => setPass(e.target.value)} 
+            autoComplete={isSignUp ? "new-password" : "current-password"}
           />
         </div>
 
