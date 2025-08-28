@@ -89,10 +89,18 @@ export default function AuthPage() {
 
   async function handleSignIn() {
     console.log('🔑 Calling supabase.auth.signInWithPassword with:', { email, password: pass });
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email, 
-      password: pass,
-    });
+    const withTimeout = (p, ms = 12000) =>
+      Promise.race([
+        p,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Network timeout. Check CORS/URL settings.")), ms))
+      ]);
+
+    const { data, error } = await withTimeout(
+      supabase.auth.signInWithPassword({
+        email,
+        password: pass,
+      })
+    );
     
     console.log('🔑 Sign in response:', { data, error });
     
