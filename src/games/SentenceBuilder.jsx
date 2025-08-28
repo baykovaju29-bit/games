@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import Page from "../ui/Page.jsx";
 import Stat from "../ui/Stat.jsx";
 import { shuffle } from "../utils";
-import Papa from "papaparse";
 
 // --- Токенизация (убираем финальную точку/знак, разбиваем на слова) ---
 function tokenize(sentence) {
@@ -22,7 +21,7 @@ function normalizeTokens(tokens) {
     .toLowerCase();
 }
 
-export default function SentenceBuilder({ meta }) {
+export default function SentenceBuilder({ meta, pairs = [] }) {
   const [deck, setDeck] = useState([]);
   const [i, setI] = useState(0);
   const [answer, setAnswer] = useState([]);
@@ -34,15 +33,9 @@ export default function SentenceBuilder({ meta }) {
   const [wrongPulse, setWrongPulse] = useState(false);
   const [okFlash, setOkFlash] = useState(false);
 
-  // Загружаем CSV с предложениями
+  // Ранее мы грузили /data.csv. Убираем выборку, оставляем пустой deck по умолчанию.
   useEffect(() => {
-    fetch("/data.csv")
-      .then(res => res.text())
-      .then(text => {
-        const result = Papa.parse(text, { header: true });
-        const lines = result.data.filter(r => r.sentence && r.tense);
-        setDeck(lines);
-      });
+    setDeck([]);
   }, []);
 
   // Текущее предложение
@@ -106,7 +99,7 @@ export default function SentenceBuilder({ meta }) {
     answered > 0 ? Math.round((score / answered) * 100) + "%" : "—";
 
   if (deck.length === 0) {
-    return <div className="p-6">Loading sentences...</div>;
+    return <div className="p-6">No sentence dataset configured.</div>;
   }
 
   return (
