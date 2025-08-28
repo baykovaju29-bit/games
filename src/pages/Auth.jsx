@@ -39,6 +39,7 @@ export default function AuthPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (busy) return; // prevent double submission
     console.log('🔐 Form submitted!', { email, pass, isSignUp });
     setMsg("");
     setBusy(true);
@@ -59,12 +60,7 @@ export default function AuthPage() {
     }
   };
 
-  // Also handle button click as a backup
-  const handleButtonClick = async () => {
-    console.log('🖱️ Button clicked, calling handleSubmit directly');
-    const fakeEvent = { preventDefault: () => {} };
-    await handleSubmit(fakeEvent);
-  };
+  // (removed duplicate click handler to avoid double requests)
 
   async function handleSignUp() {
     console.log('🚀 Calling supabase.auth.signUp with:', { email, password: pass });
@@ -166,7 +162,6 @@ export default function AuthPage() {
             type="submit"
             className="btn btn-primary" 
             disabled={busy}
-            onClick={handleButtonClick}
           >
             {isSignUp ? "Create account" : "Log in"}
           </button>
