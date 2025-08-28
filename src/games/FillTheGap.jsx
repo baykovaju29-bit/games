@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Page from "../ui/Page.jsx";
 import Stat from "../ui/Stat.jsx";
-import Papa from "papaparse";
 import { recordResult } from "../lib/progress";
 
 const norm = (s = "") =>
@@ -31,7 +30,7 @@ function renderGap(sentence, gap) {
   });
 }
 
-export default function FillTheGap({ meta }) {
+export default function FillTheGap({ meta, pairs = [] }) {
   const [deck, setDeck] = useState([]);
   const [i, setI] = useState(0);
   const [gap, setGap] = useState("");
@@ -48,18 +47,7 @@ export default function FillTheGap({ meta }) {
   const accuracy = answered ? Math.round((score / answered) * 100) + "%" : "—";
 
   useEffect(() => {
-    fetch("/data.csv")
-      .then(res => res.text())
-      .then(text => {
-        const res = Papa.parse(text, { header: true });
-        const rows = res.data.filter(r => r && r.sentence && r.sentence.trim());
-        setDeck(rows);
-        if (rows.length) {
-          const ni = Math.floor(Math.random() * rows.length);
-          setI(ni);
-          setGap(chooseGapWord(rows[ni].sentence));
-        }
-      });
+    setDeck([]);
   }, []);
 
   useEffect(() => { setMadeMistake(false); setValue(""); setMsg(""); }, [i]);
@@ -113,7 +101,7 @@ export default function FillTheGap({ meta }) {
     setValue(gap);
   }
 
-  if (!deck.length) return <div className="p-6">Loading…</div>;
+  if (!deck.length) return <div className="p-6">No sentence dataset configured.</div>;
 
   return (
     <Page title="Fill the Gap" subtitle="Type the missing word to complete the sentence.">
