@@ -132,7 +132,7 @@ export default function AuthPage() {
       <h1 className="h1 mb-2">Account</h1>
       <p className="sub mb-4">Create an account or sign in.</p>
 
-      <form className="card card-pad space-y-3" onSubmit={handleSubmit}>
+      <form className="card card-pad space-y-3" onSubmit={handleSubmit} noValidate>
         {isSignUp && (
           <div>
             <label className="sub block" htmlFor="auth_name">Name (optional)</label>
@@ -180,6 +180,7 @@ export default function AuthPage() {
             type="submit"
             className="btn btn-primary" 
             disabled={busy}
+            onClick={handleSubmit}
           >
             {isSignUp ? "Create account" : "Log in"}
           </button>
