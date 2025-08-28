@@ -10,13 +10,15 @@ export default function AuthPage() {
   const [msg, setMsg] = useState("");
   const [session, setSession] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(true); // Track if we're in sign-up or sign-in mode
+  const [isSignUp, setIsSignUp] = useState(false); // Default to login mode
   const navigate = useNavigate();
   const loc = useLocation();
   const redirectPath = useMemo(() => {
     const params = new URLSearchParams(loc.search || "");
-    const r = params.get("redirect");
-    return r && r.startsWith("/") ? r : "/";
+    const requested = params.get("redirect");
+    let r = requested && requested.startsWith("/") ? requested : "/home";
+    if (r === "/learn") r = "/home";
+    return r;
   }, [loc.search]);
 
   // Подписываемся на изменения сессии — сразу видно, вошли или нет
@@ -165,7 +167,7 @@ export default function AuthPage() {
             disabled={busy}
             onClick={handleButtonClick}
           >
-            {isSignUp ? "Sign up" : "Sign in"}
+            {isSignUp ? "Create account" : "Log in"}
           </button>
           
           <button 
@@ -177,7 +179,7 @@ export default function AuthPage() {
             }}
             disabled={busy}
           >
-            {isSignUp ? "Switch to Sign in" : "Switch to Sign up"}
+            {isSignUp ? "Already have an account?" : "Create new account"}
           </button>
           
           {session && (
