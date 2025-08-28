@@ -3,6 +3,7 @@ import React from "react";
 import { HashRouter as Router, Routes, Route, Link, useNavigate, Navigate } from "react-router-dom";
 import "./styles/index.css";
 import { usePairsData } from "./dataHook.jsx";
+import { useSupabasePairs } from "./hooks/useSupabasePairs";
 
 import Matching from "./games/Matching.jsx";
 import Flashcards from "./games/Flashcards.jsx";
@@ -89,7 +90,13 @@ function Menu(){
 }
 
 export default function App(){
-  const { pairs, source, error, updatedAt } = usePairsData();
+  // Switch to Supabase-backed pairs; fall back to file if empty
+  const supa = useSupabasePairs();
+  const file = usePairsData();
+  const pairs = (supa.pairs && supa.pairs.length) ? supa.pairs : file.pairs;
+  const source = (supa.pairs && supa.pairs.length) ? supa.source : file.source;
+  const error = supa.error || file.error;
+  const updatedAt = supa.updatedAt || file.updatedAt;
 
   const meta = (
     <div className="text-xs text-slate-500">
