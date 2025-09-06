@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Page from "../ui/Page.jsx";
 import Stat from "../ui/Stat.jsx";
+import GrammarSetupModal from "../ui/GrammarSetupModal.jsx";
+import { useSentencesSupabase } from "../hooks/useSentencesSupabase";
 import { shuffle } from "../utils";
 
 // --- Токенизация (убираем финальную точку/знак, разбиваем на слова) ---
@@ -21,7 +23,17 @@ function normalizeTokens(tokens) {
     .toLowerCase();
 }
 
+const SAMPLE_SENTENCES = [
+  "If I won the lottery, I would buy a house.",
+  "She is writing a letter.",
+  "I used to play the piano.",
+  "The cake was eaten before we arrived.",
+  "There are many books on the shelf."
+];
+
 export default function SentenceBuilder({ meta, pairs = [] }) {
+  const [filters, setFilters] = useState({ construction: "conditional_2" });
+  const [showModal, setShowModal] = useState(true);
   const [deck, setDeck] = useState([]);
   const [i, setI] = useState(0);
   const [answer, setAnswer] = useState([]);
@@ -33,10 +45,20 @@ export default function SentenceBuilder({ meta, pairs = [] }) {
   const [wrongPulse, setWrongPulse] = useState(false);
   const [okFlash, setOkFlash] = useState(false);
 
-  // Ранее мы грузили /data.csv. Убираем выборку, оставляем пустой deck по умолчанию.
+  // Fetch sentences from Supabase with filters
+  const { rows: supabaseRows, loading, error } = useSentencesSupabase({ ...filters, limit: 50 });
+
+  // Use Supabase data or fallback to sample
+  const sentences = useMemo(() => {
+    if (supabaseRows.length > 0) {
+      return supabaseRows.map(r => ({ sentence: r.text, tense: r.tense, aspect: r.aspect, voice: r.voice, construction: r.construction }));
+    }
+    return SAMPLE_SENTENCES.map(s => ({ sentence: s, tense: "unknown", aspect: "unknown", voice: "unknown", construction: "unknown" }));
+  }, [supabaseRows]);
+
   useEffect(() => {
-    setDeck([]);
-  }, []);
+    setDeck(sentences);
+  }, [sentences]);
 
   // Текущее предложение
   const current = deck[i] || {};
@@ -98,15 +120,43 @@ export default function SentenceBuilder({ meta, pairs = [] }) {
   const accuracy =
     answered > 0 ? Math.round((score / answered) * 100) + "%" : "—";
 
+  if (loading) {
+    return <div className="p-6">Loading sentences...</div>;
+  }
+
   if (deck.length === 0) {
-    return <div className="p-6">No sentence dataset configured.</div>;
+    return (
+      <div className="p-6">
+        <div className="text-center">
+          <p className="mb-4">No sentences found with current filters.</p>
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+            ⚙️ Change Settings
+          </button>
+        </div>
+        {showModal && (
+          <GrammarSetupModal
+            open={showModal}
+            initial={filters}
+            onClose={() => setShowModal(false)}
+            onApply={(newFilters) => {
+              setFilters(newFilters);
+              setShowModal(false);
+            }}
+          />
+        )}
+      </div>
+    );
   }
 
   return (
     <Page
       title="Sentence Builder"
       subtitle="Tap words in order to build a correct sentence. (No dot at the end needed)"
-      right={null}
+      right={
+        <button className="btn" onClick={() => setShowModal(true)}>
+          ⚙️ Settings
+        </button>
+      }
     >
       {/* Статы */}
       <div className="grid grid-cols-4 gap-2 md:gap-3 mb-6">
@@ -175,6 +225,20 @@ export default function SentenceBuilder({ meta, pairs = [] }) {
 
       {message && <div className="text-center mt-3 sub">{message}</div>}
       <div className="mt-4">{meta}</div>
+      
+      {showModal && (
+        <GrammarSetupModal
+          open={showModal}
+          initial={filters}
+          onClose={() => setShowModal(false)}
+          onApply={(newFilters) => {
+            setFilters(newFilters);
+            setShowModal(false);
+            setI(0);
+            resetCurrent();
+          }}
+        />
+      )}
     </Page>
   );
 }

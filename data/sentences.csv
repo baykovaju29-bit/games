@@ -1,0 +1,13 @@
+text,tense,aspect,voice,construction,difficulty,source,is_active
+"If I won the lottery, I would buy a house.",past,simple,active,conditional_2,2,seed,TRUE
+"If it rains tomorrow, we will stay at home.",present,simple,active,conditional_1,1,seed,TRUE
+"She is writing a letter.",present,progressive,active,,1,seed,TRUE
+"The cake was eaten before we arrived.",past,perfect,passive,,2,seed,TRUE
+"I used to play the piano.",past,simple,active,used_to,1,seed,TRUE
+"There are many books on the shelf.",present,simple,active,there_is,1,seed,TRUE
+"I have been working here for five years.",present,perfect-progressive,active,,3,seed,TRUE
+"If I had studied harder, I would have passed the exam.",past,perfect,active,conditional_3,4,seed,TRUE
+"The letter was being written when I arrived.",past,progressive,passive,,3,seed,TRUE
+"I will have finished by tomorrow.",future,perfect,active,,2,seed,TRUE
+"If you heat water to 100 degrees, it boils.",present,simple,active,conditional_0,1,seed,TRUE
+"She would have been working if she hadn't been sick.",past,perfect-progressive,active,conditional_3,5,seed,TRUE

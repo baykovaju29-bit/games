@@ -1,12 +1,22 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Page from "../ui/Page.jsx";
 import Stat from "../ui/Stat.jsx";
+import GrammarSetupModal from "../ui/GrammarSetupModal.jsx";
+import { useSentencesSupabase } from "../hooks/useSentencesSupabase";
 import { recordResult } from "../lib/progress";
 
 const norm = (s = "") =>
   s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9'-\s]/gi, "").replace(/\s+/g, " ").trim();
 
 const STOP = new Set(["the","a","an","and","or","but","to","in","on","at","for","of","with","by","as","is","are","am","was","were","be","been","being"]);
+
+const SAMPLE_SENTENCES = [
+  "If I won the lottery, I would buy a house.",
+  "She is writing a letter.",
+  "I used to play the piano.",
+  "The cake was eaten before we arrived.",
+  "There are many books on the shelf."
+];
 
 function chooseGapWord(sentence) {
   const tokens = sentence.split(/\s+/).filter(Boolean);
@@ -31,6 +41,8 @@ function renderGap(sentence, gap) {
 }
 
 export default function FillTheGap({ meta, pairs = [] }) {
+  const [filters, setFilters] = useState({ construction: "conditional_2" });
+  const [showModal, setShowModal] = useState(true);
   const [deck, setDeck] = useState([]);
   const [i, setI] = useState(0);
   const [gap, setGap] = useState("");
@@ -46,9 +58,20 @@ export default function FillTheGap({ meta, pairs = [] }) {
 
   const accuracy = answered ? Math.round((score / answered) * 100) + "%" : "—";
 
+  // Fetch sentences from Supabase with filters
+  const { rows: supabaseRows, loading, error } = useSentencesSupabase({ ...filters, limit: 50 });
+
+  // Use Supabase data or fallback to sample
+  const sentences = useMemo(() => {
+    if (supabaseRows.length > 0) {
+      return supabaseRows.map(r => ({ sentence: r.text, tense: r.tense, aspect: r.aspect, voice: r.voice, construction: r.construction }));
+    }
+    return SAMPLE_SENTENCES.map(s => ({ sentence: s, tense: "unknown", aspect: "unknown", voice: "unknown", construction: "unknown" }));
+  }, [supabaseRows]);
+
   useEffect(() => {
-    setDeck([]);
-  }, []);
+    setDeck(sentences);
+  }, [sentences]);
 
   useEffect(() => { setMadeMistake(false); setValue(""); setMsg(""); }, [i]);
 
@@ -101,10 +124,44 @@ export default function FillTheGap({ meta, pairs = [] }) {
     setValue(gap);
   }
 
-  if (!deck.length) return <div className="p-6">No sentence dataset configured.</div>;
+  if (loading) {
+    return <div className="p-6">Loading sentences...</div>;
+  }
+
+  if (!deck.length) {
+    return (
+      <div className="p-6">
+        <div className="text-center">
+          <p className="mb-4">No sentences found with current filters.</p>
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+            ⚙️ Change Settings
+          </button>
+        </div>
+        {showModal && (
+          <GrammarSetupModal
+            open={showModal}
+            initial={filters}
+            onClose={() => setShowModal(false)}
+            onApply={(newFilters) => {
+              setFilters(newFilters);
+              setShowModal(false);
+            }}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
-    <Page title="Fill the Gap" subtitle="Type the missing word to complete the sentence.">
+    <Page 
+      title="Fill the Gap" 
+      subtitle="Type the missing word to complete the sentence."
+      right={
+        <button className="btn" onClick={() => setShowModal(true)}>
+          ⚙️ Settings
+        </button>
+      }
+    >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-3 mb-6">
         <Stat label="Items" value={deck.length} />
         <Stat label="Score" value={score} />
@@ -138,6 +195,22 @@ export default function FillTheGap({ meta, pairs = [] }) {
 
       {msg && <div className="text-center mt-2 sub">{msg}</div>}
       <div className="mt-4">{meta}</div>
+      
+      {showModal && (
+        <GrammarSetupModal
+          open={showModal}
+          initial={filters}
+          onClose={() => setShowModal(false)}
+          onApply={(newFilters) => {
+            setFilters(newFilters);
+            setShowModal(false);
+            setI(0);
+            setValue("");
+            setMadeMistake(false);
+            setMsg("");
+          }}
+        />
+      )}
     </Page>
   );
 }
